@@ -27,13 +27,13 @@ class ItemStore {
     return (_cache[key] as ItemWithMetaData<T>).data;
   }
 
-  T get<T>(ItemFactory<T> itemFactory) {
-    if (!_cache.keys.contains(itemFactory)) {
-      create(itemFactory, key: itemFactory);
-    }
+  // T get<T>(ItemFactory<T> itemFactory) {
+  //   if (!_cache.keys.contains(itemFactory)) {
+  //     create(itemFactory, key: itemFactory);
+  //   }
 
-    return read<T>(itemFactory);
-  }
+  //   return read<T>(itemFactory);
+  // }
 
   /// Disposes the item and then removes it from the cache.
   void disposeItem(Object key) {
@@ -52,6 +52,16 @@ class ItemStore {
   }
 }
 
+extension ItemStoreClosureX on ItemStore {
+  T get<T>(ItemFactory<T> itemFactory) {
+    if (!_cache.keys.contains(itemFactory)) {
+      create(itemFactory, key: itemFactory);
+    }
+
+    return read<T>(itemFactory);
+  }
+}
+
 class Ref {
   Ref({required ItemStore store}) : _store = store;
 
@@ -59,7 +69,7 @@ class Ref {
 
   final ItemMetaData _itemMetaData = ItemMetaData();
 
-  T call<T>(ItemFactory<T> itemFactory) => _store.read<T>(itemFactory);
+  T call<T>(ItemFactory<T> itemFactory) => _store.get<T>(itemFactory);
 
   T create<T>(ItemFactory<T> itemFactory, {required Object key}) {
     return _store.create(itemFactory, key: key);
