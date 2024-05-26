@@ -19,23 +19,23 @@ ItemFactory<Signal<T>> signalFactory<T>({
 }
 
 ItemFactory<Computed<T>> computedFactory<T>(
-  T Function() compute, {
+  T Function() Function(Ref) computeBuilder, {
   String? debugLabel,
   bool autoDispose = false,
 }) =>
     (Ref ref) => ref.registerDisposable(computed(
-          compute,
+          computeBuilder(ref),
           debugLabel: debugLabel,
           autoDispose: autoDispose,
         )..onDispose(() => ref.disposeSelf()));
 
 ItemFactory<void Function()> effectFactory(
-  void Function() compute, {
+  void Function() Function(Ref) computeBuilder, {
   String? debugLabel,
   dynamic Function()? onDispose,
 }) =>
     (Ref ref) => effect(
-          compute,
+          computeBuilder(ref),
           debugLabel: debugLabel,
           onDispose: () {
             onDispose?.call();
