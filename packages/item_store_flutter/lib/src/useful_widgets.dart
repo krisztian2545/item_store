@@ -1,5 +1,4 @@
 import 'package:flutter/widgets.dart';
-import 'package:item_store/item_store.dart';
 import 'package:item_store_flutter/item_store_flutter.dart';
 
 class ItemsHandler extends StatefulWidget {
