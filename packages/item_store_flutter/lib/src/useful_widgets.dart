@@ -4,12 +4,17 @@ import 'package:item_store_flutter/item_store_flutter.dart';
 class ItemsHandler extends StatefulWidget {
   const ItemsHandler({
     super.key,
-    required this.child,
+    this.child,
+    this.builder,
     this.init,
     this.disposables,
-  });
+  }) : assert(
+          builder != null || child != null,
+          'builder or child must be specified!',
+        );
 
-  final Widget child;
+  final Widget? child;
+  final Widget Function(BuildContext, Widget?)? builder;
 
   final void Function(ItemStore)? init;
 
@@ -30,7 +35,7 @@ class _ItemsHandlerState extends State<ItemsHandler> {
 
   @override
   Widget build(BuildContext context) {
-    return widget.child;
+    return widget.builder?.call(context, widget.child) ?? widget.child!;
   }
 
   @override
