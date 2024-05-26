@@ -6,22 +6,22 @@ ItemFactory<Signal<T>> signalFactory<T>(
   String? debugLabel,
   bool autoDispose = false,
 }) =>
-    (Ref ref) => signal(
+    (Ref ref) => ref.registerDisposable(signal(
           value,
           debugLabel: debugLabel,
           autoDispose: autoDispose,
-        )..onDispose(() => ref.disposeSelf());
+        )..onDispose(() => ref.disposeSelf()));
 
 ItemFactory<Computed<T>> computedFactory<T>(
   T Function() compute, {
   String? debugLabel,
   bool autoDispose = false,
 }) =>
-    (Ref ref) => computed(
+    (Ref ref) => ref.registerDisposable(computed(
           compute,
           debugLabel: debugLabel,
           autoDispose: autoDispose,
-        )..onDispose(() => ref.disposeSelf());
+        )..onDispose(() => ref.disposeSelf()));
 
 ItemFactory<void Function()> effectFactory(
   void Function() compute, {
