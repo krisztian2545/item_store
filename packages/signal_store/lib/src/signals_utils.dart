@@ -51,7 +51,7 @@ ItemFactory<void Function()> effectFactory(
         },
       );
 
-      ref.onDispose(cleanup);
+      ref.onDispose((_) => cleanup());
 
       return cleanup;
     };
