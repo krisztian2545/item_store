@@ -9,7 +9,7 @@ class ItemWithMetaData<T> {
 }
 
 class ItemMetaData {
-  ItemDisposeCallback? onDispose;
+  List<ItemDisposeCallback> disposeCallbacks = [];
 }
 
 typedef ItemCacheMap = Map<Object, ItemWithMetaData>;
@@ -89,9 +89,14 @@ class ItemStore {
 
   /// Disposes the item and then removes it from the cache.
   void disposeItem(Object globalKey) {
-    _cache
-      ..[globalKey]?.metaData.onDispose?.call(this)
-      ..remove(globalKey);
+    final item = _cache[globalKey];
+    if (item == null) return;
+
+    for (final dispose in item.metaData.disposeCallbacks) {
+      dispose(this);
+    }
+
+    _cache.remove(globalKey);
   }
 
   /// Calls [disposeItem] for each key in [globalKeys].
@@ -101,9 +106,8 @@ class ItemStore {
 
   /// Disposes items and clears cache.
   void dispose() {
-    _cache
-      ..values.map((e) => e.metaData.onDispose).forEach((e) => e?.call(this))
-      ..clear();
+    disposeItems(_cache.keys.toList());
+    _cache.clear();
   }
 }
 
@@ -129,8 +133,6 @@ class Ref {
 
   final Object itemKey;
 
-  final List _disposables = [];
-
   final ItemMetaData _itemMetaData = ItemMetaData();
 
   T call<T>(ItemFactory<T> itemFactory, {Object? globalKey, Object? tag}) =>
@@ -142,31 +144,32 @@ class Ref {
 
   T read<T>(Object globalKey) => _store.read(globalKey);
 
-  ItemDisposeCallback _createDisposeCallback(ItemDisposeCallback? callback) {
-    return (store) {
-      callback?.call(store);
-      for (final disposable in _disposables) {
-        disposable.dispose();
-      }
-    };
-  }
-
   void disposeSelf() => _store.disposeItem(itemKey);
 
+  /// Adds [callback] to the list of dispose callbacks.
   void onDispose(ItemDisposeCallback callback) {
-    _itemMetaData.onDispose = _createDisposeCallback(callback);
+    _itemMetaData.disposeCallbacks.add(callback);
   }
 
-  /// Disposes the object on [onDispose].
-  /// [disposable] must have a void dispose() function.
-  T registerDisposable<T>(T disposable) {
-    _disposables.add(disposable);
-    _itemMetaData.onDispose = _createDisposeCallback(_itemMetaData.onDispose);
-    return disposable;
+  void removeDisposeCallback(ItemDisposeCallback callback) {
+    _itemMetaData.disposeCallbacks.remove(callback);
   }
 }
 
 extension RefUtilsX on Ref {
+  /// Calls the provided object's dispose function on [onDispose].
+  /// [disposable] must have a void dispose() function.
+  T registerDisposable<T extends Object>(T disposable) {
+    try {
+      final callback = (disposable as dynamic).dispose as void Function();
+      onDispose((_) => callback());
+    } catch (e) {
+      // disposable doesn't have a void dispose() function.
+    }
+
+    return disposable;
+  }
+
   /// Alias for [registerDisposable].
-  T d<T>(T disposable) => registerDisposable(disposable);
+  T d<T extends Object>(T disposable) => registerDisposable(disposable);
 }
