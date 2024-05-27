@@ -55,3 +55,21 @@ ItemFactory<void Function()> effectFactory(
 
       return cleanup;
     };
+
+extension SignalsRefUtilsX on Ref {
+  void Function() disposableEffect(
+    void Function() compute, {
+    String? debugLabel,
+    dynamic Function()? onDispose,
+  }) {
+    final cleanup = effect(
+      compute,
+      debugLabel: debugLabel,
+      onDispose: onDispose,
+    );
+
+    this.onDispose((_) => cleanup());
+
+    return cleanup;
+  }
+}
