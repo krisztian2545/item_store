@@ -1,4 +1,4 @@
-typedef ItemDisposeCallback = void Function(ItemStore);
+typedef ItemDisposeCallback = void Function();
 
 typedef ItemFactory<T> = T Function(Ref);
 
@@ -93,7 +93,7 @@ class ItemStore {
     if (item == null) return;
 
     for (final dispose in item.metaData.disposeCallbacks) {
-      dispose(this);
+      dispose();
     }
 
     _cache.remove(globalKey);
@@ -133,6 +133,7 @@ class Ref {
 
   final Object itemKey;
 
+  // TODO check if modifications to this after the build will be saved too or not
   final ItemMetaData _itemMetaData = ItemMetaData();
 
   T call<T>(ItemFactory<T> itemFactory, {Object? globalKey, Object? tag}) =>
@@ -162,7 +163,7 @@ extension RefUtilsX on Ref {
   T registerDisposable<T extends Object>(T disposable) {
     try {
       final callback = (disposable as dynamic).dispose as void Function();
-      onDispose((_) => callback());
+      onDispose(callback);
     } catch (e) {
       // disposable doesn't have a void dispose() function.
     }
