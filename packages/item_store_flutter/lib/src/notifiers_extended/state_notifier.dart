@@ -182,11 +182,22 @@ final counter = (Ref ref) {
   return (_) => createState(initialValue);
 }
 
+T? Function(Ref) previousValueFactory<T>(T current) {
+  return (ref) {
+    final (getPrevious, setPrevious) =
+        ref.local.get(createStateFactory<T?>(null));
+    final previous = getPrevious();
+    setPrevious(current);
+
+    return previous;
+  };
+}
+
 AsyncReactive<int> countDouble(Ref ref) {
   int? previous;
   final (getSome, setSome) = createState(0);
   return ref.bindToNotifier(AsyncReactive((watch) async {
-    final prev = ref.create(createStateFactory<int?>(null), globalKey: 'prev');
+    final prev = ref.local.get(previousValue<int?>());
 
     final count = watch(ref(counter).$1);
     final countDoubled = count.value * 2;

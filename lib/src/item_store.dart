@@ -121,6 +121,11 @@ extension ItemStoreUtilX on ItemStore {
     );
     return read<T>(key) ?? create(itemFactory, globalKey: key);
   }
+
+  /// Same as [get].
+  T call<T>(ItemFactory<T> itemFactory, {Object? globalKey, Object? tag}) {
+    return get(itemFactory, tag: tag, globalKey: globalKey);
+  }
 }
 
 class Ref {
