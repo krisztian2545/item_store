@@ -130,6 +130,7 @@ class Ref {
   }) : _store = store;
 
   final ItemStore _store;
+  final ItemStore local = ItemStore();
 
   final Object itemKey;
 
