@@ -1,6 +1,5 @@
-import 'package:flutter/foundation.dart';
 import 'package:item_store/item_store.dart';
-import 'package:item_store_flutter/src/notifiers_extended/readonly_value_notifier.dart';
+import 'package:item_store_flutter/src/notifiers_extended/readonly_state_notifier.dart';
 import 'async_state.dart';
 import 'state_notifier.dart';
 
@@ -10,8 +9,8 @@ extension NotifierRefX on Ref {
   }
 }
 
-extension ValueNotifierX<T> on ValueNotifier<T> {
-  ReadonlyValueNotifier<T> get readonly => this as ReadonlyValueNotifier<T>;
+extension StateNotifierX<T> on StateNotifier<T> {
+  ReadonlyStateNotifier<T> get readonly => this as ReadonlyStateNotifier<T>;
   StateNotifier toStateNotifier() {
     final stateNotifier = StateNotifier(value);
     final listener = () => stateNotifier.value = value;

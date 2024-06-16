@@ -1,13 +1,35 @@
 import 'package:flutter/foundation.dart';
-import 'package:item_store/item_store.dart';
-import 'package:item_store_flutter/src/notifiers_extended/notifier_extensions.dart';
 
 import 'async_state.dart';
+import 'state_notifier_observer.dart';
 
 typedef WatchFunction = T Function<T extends Listenable>(T listenable);
 
-class StateNotifier<T> extends ValueNotifier<T> {
-  StateNotifier(super.value, {this.autoDispose = false});
+class StateNotifier<T> extends ChangeNotifier implements ValueListenable<T> {
+  StateNotifier(this._value, {this.autoDispose = false, this.debugLabel}) {
+    if (kFlutterMemoryAllocationsEnabled) {
+      ChangeNotifier.maybeDispatchObjectCreation(this);
+    }
+  }
+
+  static StateNotifierObserver? observer;
+
+  final String? debugLabel;
+
+  @override
+  T get value => _value;
+  T _value;
+  set value(T newValue) {
+    if (_value == newValue) {
+      return;
+    }
+    _value = newValue;
+    observer?.onChange(this);
+    notifyListeners();
+  }
+
+  @override
+  String toString() => '${describeIdentity(this)}($value)';
 
   final _dependencies = <Listenable, VoidCallback>{};
 
@@ -17,8 +39,16 @@ class StateNotifier<T> extends ValueNotifier<T> {
 
   L listen<L extends Listenable>(L dependency, VoidCallback callback) {
     if (!_dependencies.containsKey(dependency)) {
-      dependency.addListener(callback);
-      _dependencies[dependency] = callback;
+      final callbackWithObserver = () {
+        try {
+          callback();
+        } catch (e) {
+          observer?.onError(this, e, StackTrace.current);
+        }
+      };
+
+      dependency.addListener(callbackWithObserver);
+      _dependencies[dependency] = callbackWithObserver;
     }
     return dependency;
   }
@@ -43,7 +73,11 @@ class StateNotifier<T> extends ValueNotifier<T> {
   @override
   void dispose() {
     for (final callback in _disposeCallbacks) {
-      callback();
+      try {
+        callback();
+      } catch (e) {
+        observer?.onError(this, e, StackTrace.current);
+      }
     }
     _clearDependencies();
     super.dispose();
@@ -77,9 +111,14 @@ class Reactive<T> extends StateNotifier<T?> {
   T _computeAndCache() {
     _clearDependencies();
 
-    value = _compute(_watch);
+    try {
+      value = _compute(_watch);
+    } catch (e) {
+      StateNotifier.observer?.onError(this, e, StackTrace.current);
+      rethrow;
+    }
 
-    return value!;
+    return super.value!;
   }
 
   void invalidate() => value = null;
@@ -125,84 +164,4 @@ class AsyncReactive<T> extends StateNotifier<AsyncState<T>?> {
   void invalidate() => value = null;
 
   void recompute() => _computeAndCache();
-}
-
-// --------------------------------------------
-
-class Counter extends StateNotifier {
-  Counter(ValueNotifier jumpTo) : super(0) {
-    listen(jumpTo, () => value = jumpTo.value);
-  }
-}
-
-T Function(Ref) dof<T>(T Function(Ref) objectFactory) {
-  return (ref) {
-    final o = objectFactory(ref);
-    try {
-      // dispose object when being removed from the store
-      final callback = (o as dynamic).dispose as void Function();
-      ref.onDispose(callback);
-
-      // dispose item from the store, when object gets disposed
-      (o as dynamic).onDispose(ref.disposeSelf);
-    } catch (e) {
-      // disposable doesn't have a void dispose() function
-      // or doesn't accept an onDispose callback.
-    }
-
-    return o;
-  };
-}
-
-class CountDoubled extends StateNotifier<int> {
-  CountDoubled(ValueNotifier count)
-      : super(
-          count.value * 2,
-          autoDispose: true,
-        ) {
-    listen(count, () => value = count.value * 2);
-  }
-}
-
-final counter = (Ref ref) {
-  final count = ref.bindToNotifier(StateNotifier(0));
-  return (
-    count.readonly,
-    increment: () => count.value++,
-  );
-};
-
-(T Function(), void Function(T)) createState<T>(T initialValue) {
-  T state = initialValue;
-  return (() => state, (newState) => state = newState);
-}
-
-(T Function(), void Function(T)) Function(Ref) createStateFactory<T>(
-    T initialValue) {
-  return (_) => createState(initialValue);
-}
-
-T? Function(Ref) previousValueFactory<T>(T current) {
-  return (ref) {
-    final (getPrevious, setPrevious) =
-        ref.local.get(createStateFactory<T?>(null));
-    final previous = getPrevious();
-    setPrevious(current);
-
-    return previous;
-  };
-}
-
-AsyncReactive<int> countDouble(Ref ref) {
-  int? previous;
-  final (getSome, setSome) = createState(0);
-  return ref.bindToNotifier(AsyncReactive((watch) async {
-    final prev = ref.local.get(previousValue<int?>());
-
-    final count = watch(ref(counter).$1);
-    final countDoubled = count.value * 2;
-    print('$previous > $countDoubled');
-    previous = countDoubled;
-    return countDoubled;
-  }));
 }
