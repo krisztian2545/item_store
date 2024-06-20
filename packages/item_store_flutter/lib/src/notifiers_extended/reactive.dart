@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:item_store_flutter/src/notifiers_extended/disposable_mixin.dart';
 import 'package:item_store_flutter/src/notifiers_extended/listenable_listener.dart';
 
 import 'async_state.dart';
+import 'change_observer.dart';
 import 'state_notifier.dart';
 
 class Reactive<T> extends StateNotifier<T> {
@@ -41,7 +43,7 @@ class Reactive<T> extends StateNotifier<T> {
       newValue = _compute(_watch);
       value = newValue;
     } catch (e) {
-      StateNotifier.observer?.onError(this, e, StackTrace.current);
+      ChangeObserver.observer?.onError(this, e, StackTrace.current);
       rethrow;
     }
 
@@ -98,17 +100,24 @@ class AsyncReactive<T> extends StateNotifier<AsyncState<T>> {
   void recompute() => _computeAndCache();
 }
 
-class Effect with ListenableListenerMixin {
+class Effect with ListenableListenerMixin, DisposableMixin {
   Effect(
     this.effect, {
     required List<Listenable> dependencies,
+    this.debugLabel,
   }) {
     for (final dependency in dependencies) {
       listenTo(dependency, effect);
     }
   }
 
+  final String? debugLabel;
+
   final FutureOr<void> Function() effect;
 
-  void dispose() => clearDependencies();
+  @override
+  void dispose() {
+    super.dispose();
+    clearDependencies();
+  }
 }

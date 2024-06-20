@@ -1,12 +1,17 @@
 import 'package:flutter/foundation.dart';
+import 'package:item_store_flutter/src/notifiers_extended/disposable_mixin.dart';
 import 'package:item_store_flutter/src/notifiers_extended/listenable_listener.dart';
 
-import 'state_notifier_observer.dart';
+import 'change_observer.dart';
 
 typedef WatchFunction = T Function<T extends Listenable>(T listenable);
 
-class StateNotifier<T> extends ChangeNotifier
-    with ListenableListenerMixin
+class ChangeNotifier2 extends ChangeNotifier {
+  void notifierDispose() => super.dispose();
+}
+
+class StateNotifier<T> extends ChangeNotifier2
+    with ListenableListenerMixin, DisposableMixin
     implements ValueListenable<T> {
   StateNotifier(this._value, {this.autoDispose = false, this.debugLabel}) {
     if (kFlutterMemoryAllocationsEnabled) {
@@ -20,8 +25,6 @@ class StateNotifier<T> extends ChangeNotifier
     }
   }
 
-  static StateNotifierObserver? observer;
-
   final String? debugLabel;
 
   @override
@@ -32,7 +35,7 @@ class StateNotifier<T> extends ChangeNotifier
       return;
     }
     _value = newValue;
-    observer?.onChange(this);
+    ChangeObserver.observer?.onChange(this);
     notifyListeners();
   }
 
@@ -42,15 +45,13 @@ class StateNotifier<T> extends ChangeNotifier
   /// Automatically disposes when the last listener unsubscribes from this notifier.
   final bool autoDispose;
 
-  final _disposeCallbacks = <VoidCallback>[];
-
   @override
   L listenTo<L extends Listenable>(L dependency, VoidCallback callback) {
     return super.listenTo(dependency, () {
       try {
         callback();
       } catch (e) {
-        observer?.onError(this, e, StackTrace.current);
+        ChangeObserver.observer?.onError(this, e, StackTrace.current);
       }
     });
   }
@@ -62,18 +63,11 @@ class StateNotifier<T> extends ChangeNotifier
     dispose();
   }
 
-  void onDispose(void Function() callback) => _disposeCallbacks.add(callback);
-
   @override
   void dispose() {
-    for (final callback in _disposeCallbacks) {
-      try {
-        callback();
-      } catch (e) {
-        observer?.onError(this, e, StackTrace.current);
-      }
-    }
-    clearDependencies();
+    // calls dispose callbacks
     super.dispose();
+    clearDependencies();
+    notifierDispose();
   }
 }
