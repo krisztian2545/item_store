@@ -38,7 +38,7 @@ class CountDoubled extends StateNotifier<int> {
 }
 
 final counter = (Ref ref) {
-  final count = ref.bindToNotifier(StateNotifier(0));
+  final count = ref.bindToDisposable(StateNotifier(0));
   return (
     count.readonly,
     increment: () => count.value++,
@@ -69,7 +69,7 @@ T? Function(Ref) previousValueFactory<T>(T current) {
 AsyncReactive<int> countDouble(Ref ref) {
   int? previous;
   final (getSome, setSome) = createState(0);
-  return ref.bindToNotifier(AsyncReactive((watch) async {
+  return ref.bindToDisposable(AsyncReactive((watch) async {
     final count = watch(ref(counter).$1);
     final countDoubled = count.value * 2;
 
