@@ -39,6 +39,7 @@ class StateNotifier<T> extends ChangeNotifier
   @override
   String toString() => '${describeIdentity(this)}($value)';
 
+  /// Automatically disposes when the last listener unsubscribes from this notifier.
   final bool autoDispose;
 
   final _disposeCallbacks = <VoidCallback>[];

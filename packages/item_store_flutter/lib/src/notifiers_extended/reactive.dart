@@ -98,13 +98,17 @@ class AsyncReactive<T> extends StateNotifier<AsyncState<T>> {
   void recompute() => _computeAndCache();
 }
 
-class Effect extends ChangeNotifier with ListenableListenerMixin {
+class Effect with ListenableListenerMixin {
   Effect(
-    FutureOr<void> Function(WatchFunction) effect, {
-    bool lazy = false,
-    super.autoDispose,
-  }) : super((watch) {
-          effect(watch);
-          return dispose;
-        });
+    this.effect, {
+    required List<Listenable> dependencies,
+  }) {
+    for (final dependency in dependencies) {
+      listenTo(dependency, effect);
+    }
+  }
+
+  final FutureOr<void> Function() effect;
+
+  void dispose() => clearDependencies();
 }
