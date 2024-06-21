@@ -51,7 +51,7 @@ ItemFactory<void Function()> effectFactory(
         },
       );
 
-      ref.onDispose((_) => cleanup());
+      ref.onDispose(cleanup);
 
       return cleanup;
     };
@@ -68,7 +68,7 @@ extension SignalsRefUtilsX on Ref {
       onDispose: onDispose,
     );
 
-    this.onDispose((_) => cleanup());
+    this.onDispose(cleanup);
 
     return cleanup;
   }
