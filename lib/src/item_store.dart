@@ -76,6 +76,10 @@ class ItemStore {
 
     final ref = Ref(store: this, itemKey: key);
     final result = itemFactory(ref);
+
+    // dispose the local store of an item on its disposal
+    ref.onDispose(() => ref.local.dispose());
+
     _cache[key] = ItemWithMetaData<T>(result, ref._itemMetaData);
 
     return result;
@@ -139,7 +143,6 @@ class Ref {
 
   final Object itemKey;
 
-  // TODO check if modifications to this after the build will be saved too or not
   final ItemMetaData _itemMetaData = ItemMetaData();
 
   T call<T>(ItemFactory<T> itemFactory, {Object? globalKey, Object? tag}) =>

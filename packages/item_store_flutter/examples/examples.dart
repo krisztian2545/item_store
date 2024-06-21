@@ -1,10 +1,11 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:item_store/item_store.dart';
+import 'package:item_store_flutter/src/item_consumer.dart';
 import 'package:item_store_flutter/src/notifiers_extended/notifiers_extended.dart';
 
 class Counter extends StateNotifier {
   Counter(ValueNotifier jumpTo) : super(0) {
-    listen(jumpTo, () => value = jumpTo.value);
+    listenTo(jumpTo, () => value = jumpTo.value);
   }
 }
 
@@ -33,7 +34,7 @@ class CountDoubled extends StateNotifier<int> {
           count.value * 2,
           autoDispose: true,
         ) {
-    listen(count, () => value = count.value * 2);
+    listenTo(count, () => value = count.value * 2);
   }
 }
 
@@ -79,4 +80,22 @@ AsyncReactive<int> countDouble(Ref ref) {
     previous = countDoubled;
     return countDoubled;
   }));
+}
+
+ValueNotifier<int> counterNotifier(Ref ref) => ValueNotifier(0);
+
+class CounterWidget extends ItemConsumer {
+  const CounterWidget({super.key});
+
+  @override
+  Widget build(BuildContext context, Ref ref) {
+    final countNotifier = ref.local(counterNotifier);
+    return ValueListenableBuilder(
+      valueListenable: countNotifier,
+      builder: (context, count, _) => TextButton(
+        onPressed: () => countNotifier.value++,
+        child: Text('$count'),
+      ),
+    );
+  }
 }
