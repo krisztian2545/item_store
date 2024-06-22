@@ -30,13 +30,23 @@ class StateNotifier<T> extends ChangeNotifier2
   @override
   T get value => _value;
   late T _value;
-  set value(T newValue) {
-    if (_value == newValue) {
-      return;
+  set value(T newValue) => set(newValue, forceUpdate: false);
+
+  void set(T newValue, {bool forceUpdate = false}) {
+    if (!forceUpdate) {
+      if (_value == newValue) {
+        return;
+      }
     }
     _value = newValue;
     ChangeObserver.observer?.onChange(this);
     notifyListeners();
+  }
+
+  /// Set value without notifying listeners.
+  void silentSet(T newValue) {
+    _value = newValue;
+    ChangeObserver.observer?.onChange(this);
   }
 
   @override
