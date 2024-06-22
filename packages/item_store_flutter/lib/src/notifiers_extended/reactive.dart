@@ -41,7 +41,7 @@ class Reactive<T> extends StateNotifier<T> {
     final T newValue;
     try {
       newValue = _compute(_watch);
-      value = newValue;
+      set(newValue, forceUpdate: _needsBuild);
     } catch (e) {
       ChangeObserver.observer?.onError(this, e, StackTrace.current);
       rethrow;
@@ -84,7 +84,7 @@ class AsyncReactive<T> extends StateNotifier<AsyncState<T>> {
   final Future<T> Function(WatchFunction) _compute;
 
   AsyncState<T> _computeAndCache() {
-    value = AsyncLoading();
+    set(AsyncLoading(), forceUpdate: _needsBuild);
     clearDependencies();
 
     _compute(_watch).then((data) => value = AsyncData(data)).catchError((err) {

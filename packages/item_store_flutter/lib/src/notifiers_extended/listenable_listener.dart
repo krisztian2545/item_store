@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:item_store_flutter/item_store_flutter.dart';
 
 mixin ListenableListenerMixin {
   final _dependencies = <Listenable, VoidCallback>{};
