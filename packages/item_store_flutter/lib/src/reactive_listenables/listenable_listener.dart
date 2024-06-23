@@ -21,7 +21,3 @@ mixin ListenableListenerMixin {
     _dependencies.clear();
   }
 }
-
-extension type ExposedListenableListenerMixin(ListenableListenerMixin object) {
-  Map<Listenable, VoidCallback> get dependencies => object._dependencies;
-}

@@ -1,6 +1,6 @@
 import 'package:item_store/item_store.dart';
-import 'package:item_store_flutter/src/notifiers_extended/disposable_mixin.dart';
-import 'package:item_store_flutter/src/notifiers_extended/readonly_state_notifier.dart';
+import 'package:item_store_flutter/src/reactive_listenables/disposable_mixin.dart';
+import 'package:item_store_flutter/src/reactive_listenables/readonly_state_notifier.dart';
 import 'async_state.dart';
 import 'state_notifier.dart';
 

@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:item_store_flutter/src/notifiers_extended/disposable_mixin.dart';
-import 'package:item_store_flutter/src/notifiers_extended/listenable_listener.dart';
+import 'package:item_store_flutter/src/reactive_listenables/disposable_mixin.dart';
+import 'package:item_store_flutter/src/reactive_listenables/listenable_listener.dart';
 
 import 'async_state.dart';
 import 'change_observer.dart';

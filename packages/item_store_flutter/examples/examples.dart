@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:item_store/item_store.dart';
 import 'package:item_store_flutter/src/item_consumer.dart';
-import 'package:item_store_flutter/src/notifiers_extended/notifiers_extended.dart';
+import 'package:item_store_flutter/src/reactive_listenables/reactive_listenables.dart';
 
 class Counter extends StateNotifier {
   Counter(ValueNotifier jumpTo) : super(0) {

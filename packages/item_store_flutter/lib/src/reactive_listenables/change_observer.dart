@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:item_store_flutter/src/notifiers_extended/reactive.dart';
+import 'package:item_store_flutter/src/reactive_listenables/reactive.dart';
 
 import 'state_notifier.dart';
 

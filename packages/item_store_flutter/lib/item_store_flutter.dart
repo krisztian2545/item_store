@@ -7,4 +7,4 @@ export 'src/context_extensions.dart';
 export 'src/item_handler.dart';
 export 'src/item_consumer.dart';
 export 'src/item_builder.dart';
-export 'src/notifiers_extended/notifiers_extended.dart';
+export 'src/reactive_listenables/reactive_listenables.dart';

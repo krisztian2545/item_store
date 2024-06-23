@@ -1,12 +1,13 @@
 import 'package:flutter/foundation.dart';
-import 'package:item_store_flutter/src/notifiers_extended/disposable_mixin.dart';
-import 'package:item_store_flutter/src/notifiers_extended/listenable_listener.dart';
+import 'package:item_store_flutter/src/reactive_listenables/custom_change_notifier.dart';
+import 'package:item_store_flutter/src/reactive_listenables/disposable_mixin.dart';
+import 'package:item_store_flutter/src/reactive_listenables/listenable_listener.dart';
 
 import 'change_observer.dart';
 
 typedef WatchFunction = T Function<T extends Listenable>(T listenable);
 
-class ChangeNotifier2 extends ChangeNotifier {
+class ChangeNotifier2 extends ChangeNotifierCopy {
   void notifierDispose() => super.dispose();
 }
 
@@ -15,13 +16,13 @@ class StateNotifier<T> extends ChangeNotifier2
     implements ValueListenable<T> {
   StateNotifier(this._value, {this.autoDispose = false, this.debugLabel}) {
     if (kFlutterMemoryAllocationsEnabled) {
-      ChangeNotifier.maybeDispatchObjectCreation(this);
+      ChangeNotifierCopy.maybeDispatchObjectCreation(this);
     }
   }
 
   StateNotifier.lateInit({this.autoDispose = false, this.debugLabel}) {
     if (kFlutterMemoryAllocationsEnabled) {
-      ChangeNotifier.maybeDispatchObjectCreation(this);
+      ChangeNotifierCopy.maybeDispatchObjectCreation(this);
     }
   }
 

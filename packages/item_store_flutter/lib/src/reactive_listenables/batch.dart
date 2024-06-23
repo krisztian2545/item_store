@@ -1,5 +1,5 @@
-import 'package:item_store_flutter/src/notifiers_extended/listenable_listener.dart';
-import 'package:item_store_flutter/src/notifiers_extended/state_notifier.dart';
+import 'package:item_store_flutter/src/reactive_listenables/custom_change_notifier.dart';
+import 'package:item_store_flutter/src/reactive_listenables/state_notifier.dart';
 
 /// Runs a batch operation on [StateNotifier] objects.
 ///
@@ -29,11 +29,9 @@ void batch(
 
   // Add all listeners to the set.
   for (final notifier in modifiedNotifiers) {
-    // Use the exposed ListenableListenerMixin to access the dependencies of the
-    // notifier.
-    (notifier as ExposedListenableListenerMixin)
-        .dependencies
-        .values
+    // Use the ExposedChangeNotifier to access the listeners of the notifier.
+    (notifier as ExposedChangeNotifier)
+        .listeners
         .forEach(distinctListeners.add);
   }
 
