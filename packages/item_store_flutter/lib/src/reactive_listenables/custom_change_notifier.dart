@@ -4,8 +4,10 @@ const _itemStoreFlutterLibrary =
     "package:item_store_flutter/item_store_flutter.dart";
 
 extension type ExposedChangeNotifier(ChangeNotifierCopy notifier) {
-  Iterable<VoidCallback> get listeners =>
-      notifier._listeners.where((e) => e != null) as Iterable<VoidCallback>;
+  List<VoidCallback> get listeners => List.from(
+        notifier._listeners.where((e) => e != null),
+        growable: false,
+      );
 }
 
 /// A copy of ChangeNotifier to access it's listeners.
