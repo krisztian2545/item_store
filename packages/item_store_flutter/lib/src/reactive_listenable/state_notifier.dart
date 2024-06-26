@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
-import 'package:item_store_flutter/src/reactive_listenables/custom_change_notifier.dart';
-import 'package:item_store_flutter/src/reactive_listenables/disposable_mixin.dart';
-import 'package:item_store_flutter/src/reactive_listenables/listenable_listener.dart';
+import 'package:item_store_flutter/src/reactive_listenable/custom_change_notifier.dart';
+import 'package:item_store_flutter/src/reactive_listenable/disposable_mixin.dart';
+import 'package:item_store_flutter/src/reactive_listenable/listenable_listener.dart';
 
 import 'change_observer.dart';
 
@@ -40,14 +40,14 @@ class StateNotifier<T> extends ChangeNotifier2
       }
     }
     _value = newValue;
-    ChangeObserver.observer?.onChange(this);
+    ReactiveListenableObserver.observer?.onChange(this);
     notifyListeners();
   }
 
   /// Set value without notifying listeners.
   void silentSet(T newValue) {
     _value = newValue;
-    ChangeObserver.observer?.onChange(this);
+    ReactiveListenableObserver.observer?.onChange(this);
   }
 
   @override
@@ -61,8 +61,9 @@ class StateNotifier<T> extends ChangeNotifier2
     return super.listenTo(dependency, () {
       try {
         callback();
-      } catch (e) {
-        ChangeObserver.observer?.onError(this, e, StackTrace.current);
+      } catch (e, stack) {
+        ReactiveListenableObserver.observer?.onError(this, e, stack);
+        rethrow;
       }
     });
   }

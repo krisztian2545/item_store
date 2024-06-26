@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:item_store_flutter/src/reactive_listenables/disposable_mixin.dart';
-import 'package:item_store_flutter/src/reactive_listenables/listenable_listener.dart';
+import 'package:item_store_flutter/src/reactive_listenable/disposable_mixin.dart';
+import 'package:item_store_flutter/src/reactive_listenable/listenable_listener.dart';
 
 import 'async_state.dart';
 import 'change_observer.dart';
@@ -23,11 +23,7 @@ class Reactive<T> extends StateNotifier<T> {
   bool _needsBuild = true;
 
   L _watch<L extends Listenable>(L dependency) {
-    return listenTo(dependency, _handleDependencyChanged);
-  }
-
-  void _handleDependencyChanged() {
-    _computeAndCache();
+    return listenTo(dependency, _computeAndCache);
   }
 
   @override
@@ -42,8 +38,8 @@ class Reactive<T> extends StateNotifier<T> {
     try {
       newValue = _compute(_watch);
       set(newValue, forceUpdate: _needsBuild);
-    } catch (e) {
-      ChangeObserver.observer?.onError(this, e, StackTrace.current);
+    } catch (e, stack) {
+      ReactiveListenableObserver.observer?.onError(this, e, stack);
       rethrow;
     }
 
@@ -88,7 +84,9 @@ class AsyncReactive<T> extends StateNotifier<AsyncState<T>> {
     clearDependencies();
 
     _compute(_watch).then((data) => value = AsyncData(data)).catchError((err) {
-      value = AsyncError(err, StackTrace.current);
+      final stack = StackTrace.current;
+      value = AsyncError(err, stack);
+      ReactiveListenableObserver.observer?.onError(this, err, stack);
     });
 
     _needsBuild = false;
@@ -102,18 +100,42 @@ class AsyncReactive<T> extends StateNotifier<AsyncState<T>> {
 
 class Effect with ListenableListenerMixin, DisposableMixin {
   Effect(
+    FutureOr<void> Function(L Function<L extends Listenable>(L)) effect, {
+    this.debugLabel,
+  }) {
+    effect(_watch);
+    this.effect = () async {
+      clearDependencies();
+      await effect(_watch);
+    };
+  }
+
+  Effect.late(
     this.effect, {
     required List<Listenable> dependencies,
     this.debugLabel,
   }) {
     for (final dependency in dependencies) {
-      listenTo(dependency, effect);
+      _watch(dependency);
     }
   }
 
   final String? debugLabel;
 
-  final FutureOr<void> Function() effect;
+  late final FutureOr<void> Function() effect;
+
+  Future<void> _observedEffect() async {
+    try {
+      await effect();
+      ReactiveListenableObserver.observer?.onChange(this);
+    } catch (e, stack) {
+      ReactiveListenableObserver.observer?.onError(this, e, stack);
+    }
+  }
+
+  L _watch<L extends Listenable>(L dependency) {
+    return listenTo(dependency, _observedEffect);
+  }
 
   @override
   void dispose() {

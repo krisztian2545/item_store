@@ -12,7 +12,8 @@ mixin DisposableMixin {
       try {
         callback();
       } catch (e) {
-        ChangeObserver.observer?.onError(this, e, StackTrace.current);
+        ReactiveListenableObserver.observer
+            ?.onError(this, e, StackTrace.current);
       }
     }
   }
