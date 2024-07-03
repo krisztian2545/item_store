@@ -56,14 +56,13 @@ final counter = (Ref ref) {
   return (_) => createState(initialValue);
 }
 
-T? Function(Ref) previousValueFactory<T>(T current) {
-  return (ref) {
-    final (getPrevious, setPrevious) =
-        ref.local.get(createStateFactory<T?>(null));
-    final previous = getPrevious();
-    setPrevious(current);
+T? Function(T) previousValueHolder<T>(Ref ref) {
+  T? previousValue;
 
-    return previous;
+  return (T newValue) {
+    final temp = previousValue;
+    previousValue = newValue;
+    return temp;
   };
 }
 
@@ -74,7 +73,7 @@ AsyncReactive<int> countDouble(Ref ref) {
     final count = watch(ref(counter).$1);
     final countDoubled = count.value * 2;
 
-    final prev = ref.local(previousValueFactory(countDoubled));
+    final prev = ref.local(previousValueHolder)(countDoubled);
     print('$previous ($prev) > $countDoubled');
 
     previous = countDoubled;

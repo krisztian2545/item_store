@@ -169,12 +169,21 @@ class Ref {
 extension RefUtilsX on Ref {
   /// Calls the provided object's dispose function on [onDispose].
   /// [disposable] must have a void dispose() function.
-  T registerDisposable<T extends Object>(T disposable) {
-    try {
-      final callback = (disposable as dynamic).dispose as void Function();
-      onDispose(callback);
-    } catch (e) {
-      // disposable doesn't have a void dispose() function.
+  T registerDisposable<T extends Object>(T disposable,
+      {bool assertCompatibility = true}) {
+    void bind(o) {
+      // dispose object when being removed from the store
+      onDispose(o.dispose);
+    }
+
+    if (assertCompatibility) {
+      bind(disposable);
+    } else {
+      try {
+        bind(disposable);
+      } catch (e) {
+        // disposable doesn't have a void dispose() function.
+      }
     }
 
     return disposable;
@@ -182,4 +191,45 @@ extension RefUtilsX on Ref {
 
   /// Alias for [registerDisposable].
   T d<T extends Object>(T disposable) => registerDisposable(disposable);
+
+  /// Bind the given [disposable] object to this ref, meaning if any of them gets disposed,
+  /// both of them will be disposed.
+  ///
+  /// [disposable] must have:
+  /// - a void dispose() function,
+  /// - a void onDispose(void Function()) function.
+  ///
+  /// If [assertCompatibility] is false, no error will be thrown when
+  /// [disposable] doesn't have one or all of the required functions.
+  ///
+  /// See also:
+  /// - [registerDisposable] for one way binding,
+  /// - [DisposableMixin] to add the required functions to your class.
+  T bindToDisposable<T>(T disposable, {bool assertCompatibility = true}) {
+    void bind(o) {
+      // dispose object when being removed from the store
+      onDispose(o.dispose);
+
+      // dispose item from the store, when object gets disposed
+      o.onDispose(disposeSelf);
+    }
+
+    if (assertCompatibility) {
+      bind(disposable);
+    } else {
+      try {
+        bind(disposable);
+      } catch (e) {
+        // disposable doesn't have a void dispose() function
+        // or doesn't accept an onDispose callback.
+      }
+    }
+
+    return disposable;
+  }
 }
+
+/// Creates an item factory function which calls [RefUtilsX.bindToDisposable] on
+/// the object returned by [objectFactory].
+T Function(Ref) dof<T extends Object>(T Function(Ref) objectFactory) =>
+    (ref) => ref.bindToDisposable(objectFactory(ref));
