@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import 'change_observer.dart';
 
-mixin DisposableMixin {
+mixin ObservedDisposableMixin {
   final _disposeCallbacks = <VoidCallback>[];
 
   void onDispose(void Function() callback) => _disposeCallbacks.add(callback);

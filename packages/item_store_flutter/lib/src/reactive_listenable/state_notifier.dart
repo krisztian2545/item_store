@@ -12,7 +12,7 @@ class ChangeNotifier2 extends ChangeNotifierCopy {
 }
 
 class StateNotifier<T> extends ChangeNotifier2
-    with ListenableListenerMixin, DisposableMixin
+    with ListenableListenerMixin, ObservedDisposableMixin
     implements ValueListenable<T> {
   StateNotifier(this._value, {this.autoDispose = false, this.debugLabel}) {
     if (kFlutterMemoryAllocationsEnabled) {

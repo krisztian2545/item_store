@@ -98,7 +98,7 @@ class AsyncReactive<T> extends StateNotifier<AsyncState<T>> {
   void recompute() => _computeAndCache();
 }
 
-class Effect with ListenableListenerMixin, DisposableMixin {
+class Effect with ListenableListenerMixin, ObservedDisposableMixin {
   Effect(
     FutureOr<void> Function(L Function<L extends Listenable>(L)) effect, {
     this.debugLabel,
