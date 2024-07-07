@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:item_store_flutter/src/reactive_listenable/disposable_mixin.dart';
-import 'package:item_store_flutter/src/reactive_listenable/listenable_listener.dart';
+import 'disposable_mixin.dart';
+import 'listenable_listener.dart';
 
 import 'async_state.dart';
 import 'change_observer.dart';
@@ -83,7 +83,9 @@ class AsyncReactive<T> extends StateNotifier<AsyncState<T>> {
     set(AsyncLoading(), forceUpdate: _needsBuild);
     clearDependencies();
 
-    _compute(_watch).then((data) => value = AsyncData(data)).catchError((err) {
+    _compute(_watch)
+        .then((data) => value = AsyncData(data))
+        .catchError((Object err) {
       final stack = StackTrace.current;
       value = AsyncError(err, stack);
       ReactiveListenableObserver.observer?.onError(this, err, stack);

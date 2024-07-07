@@ -1,5 +1,5 @@
-import 'package:item_store_flutter/src/reactive_listenable/custom_change_notifier.dart';
-import 'package:item_store_flutter/src/reactive_listenable/state_notifier.dart';
+import 'custom_change_notifier.dart';
+import 'state_notifier.dart';
 
 /// Runs a batch operation on [StateNotifier] objects.
 ///
@@ -10,8 +10,9 @@ import 'package:item_store_flutter/src/reactive_listenable/state_notifier.dart';
 /// objects that were modified by the provided [silentSet] function,
 /// are called exactly once.
 void batch(
-    void Function(void Function<T>(StateNotifier<T>, T) silentSet) operation) {
-  final modifiedNotifiers = <StateNotifier>[];
+  void Function(void Function<T>(StateNotifier<T>, T) silentSet) operation,
+) {
+  final modifiedNotifiers = <StateNotifier<dynamic>>[];
 
   // A callback to set the value of a StateNotifier object without notifying its
   // listeners, and to save it into the list of modified notifiers.
@@ -32,7 +33,7 @@ void batch(
         .forEach(distinctListeners.add);
   }
 
-  for (var listener in distinctListeners) {
+  for (final listener in distinctListeners) {
     listener();
   }
 }

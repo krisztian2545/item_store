@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
-import 'package:item_store_flutter/src/reactive_listenable/custom_change_notifier.dart';
-import 'package:item_store_flutter/src/reactive_listenable/disposable_mixin.dart';
-import 'package:item_store_flutter/src/reactive_listenable/listenable_listener.dart';
+import 'custom_change_notifier.dart';
+import 'disposable_mixin.dart';
+import 'listenable_listener.dart';
 
 import 'change_observer.dart';
 

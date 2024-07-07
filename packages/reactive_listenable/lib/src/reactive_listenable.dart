@@ -6,3 +6,4 @@ export 'notifier_extensions.dart';
 export 'reactive.dart';
 export 'readonly_state_notifier.dart';
 export 'state_notifier.dart';
+export 'widgets/widgets.dart';

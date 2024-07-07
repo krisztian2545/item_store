@@ -21,11 +21,12 @@ class ItemStore {
 
   final ItemCacheMap _cache;
 
-  /// Don't use this if you don't have to.
+  /// Don't use this unless you really have to.
   ItemCacheMap get cache => _cache;
 
   /// Helper function to determine your global key.
   ///
+  /// {@template global_key_from}
   /// The global key is determined by the following steps:
   ///   - if [globalKey] is not null, then only it will be used as the global key
   ///     (in that case the [tag] is ignored and [itemFactory] is only used
@@ -34,6 +35,7 @@ class ItemStore {
   ///     [itemFactory]. Useful if you want to store multiple objects with
   ///     the same object.
   ///   - else [itemFactory] on it's own is used as the global key.
+  /// {@endtemplate}
   static Object globalKeyFrom<T>({
     Object? globalKey,
     ItemFactory<T>? itemFactory,
@@ -59,14 +61,7 @@ class ItemStore {
   /// If there is an object cached with the same global key, then it will be
   /// overwritten.
   ///
-  /// This global key is determined by the following steps:
-  ///   - if [globalKey] is not null, then only it will be used as the global key
-  ///     (in that case the [tag] is ignored and [itemFactory] is only used
-  ///     to create the object),
-  ///   - else if [tag] is not null, then it is combined into a record with
-  ///     [itemFactory]. Useful if you want to store multiple objects tagged
-  ///     with the same object.
-  ///   - else [itemFactory] on it's own is used as the global key.
+  /// {@macro global_key_from}
   T create<T>(ItemFactory<T> itemFactory, {Object? globalKey, Object? tag}) {
     final key = globalKeyFrom(
       globalKey: globalKey,
@@ -124,11 +119,6 @@ extension ItemStoreUtilX on ItemStore {
       tag: tag,
     );
     return read<T>(key) ?? create(itemFactory, globalKey: key);
-  }
-
-  /// Same as [get].
-  T call<T>(ItemFactory<T> itemFactory, {Object? globalKey, Object? tag}) {
-    return get(itemFactory, tag: tag, globalKey: globalKey);
   }
 }
 

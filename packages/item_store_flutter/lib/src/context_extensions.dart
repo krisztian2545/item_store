@@ -4,4 +4,5 @@ import 'package:provider/provider.dart';
 
 extension ItemStoreFlutterExtension on BuildContext {
   ItemStore get store => Provider.of<ItemStore>(this, listen: false);
+  ItemStore get watchedStore => Provider.of<ItemStore>(this);
 }

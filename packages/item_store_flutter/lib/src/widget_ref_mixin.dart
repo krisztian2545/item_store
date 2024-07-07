@@ -9,6 +9,7 @@ mixin WidgetRefMixin<T extends StatefulWidget> on State<T> {
   @protected
   @mustCallSuper
   void initState() {
+    // TODO handle when parent ItemStore changes
     ref = Ref(store: context.store, itemKey: UniqueKey());
     super.initState();
   }

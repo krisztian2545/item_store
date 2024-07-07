@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:item_store_flutter/src/reactive_listenable/reactive_listenable.dart';
+import '../reactive_listenable.dart';
 
 class NotifierBuilder extends StatefulWidget {
   const NotifierBuilder({
