@@ -21,7 +21,7 @@ class ItemStore {
 
   final ItemCacheMap _cache;
 
-  /// Don't use this unless you really have to.
+  /// Please don't use this unless you really have to.
   ItemCacheMap get cache => _cache;
 
   /// Helper function to determine your global key.
@@ -122,6 +122,11 @@ extension ItemStoreUtilX on ItemStore {
   }
 }
 
+extension type LocalItemStore(ItemStore _store) implements ItemStore {
+  T call<T>(ItemFactory<T> itemFactory, {Object? globalKey, Object? tag}) =>
+      _store.get<T>(itemFactory, globalKey: globalKey, tag: tag);
+}
+
 class Ref {
   Ref({
     required ItemStore store,
@@ -129,7 +134,13 @@ class Ref {
   }) : _store = store;
 
   final ItemStore _store;
-  final ItemStore local = ItemStore();
+
+  /// An [ItemStore] exclusive to this [Ref], so you can reuse factory functions
+  /// to create local data.
+  ///
+  /// It also adds a convenience call method for [ItemStoreUtilX.get] to reduce
+  /// boilerplate.
+  final LocalItemStore local = LocalItemStore(ItemStore());
 
   final Object itemKey;
 
