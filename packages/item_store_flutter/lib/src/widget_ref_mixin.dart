@@ -3,22 +3,33 @@ import 'package:item_store/item_store.dart';
 import 'package:item_store_flutter/src/context_extensions.dart';
 
 mixin WidgetRefMixin<T extends StatefulWidget> on State<T> {
-  late final Ref ref;
+  late Ref _ref;
+  Ref get ref => _ref;
 
   @override
   @protected
   @mustCallSuper
   void initState() {
-    // TODO handle when parent ItemStore changes
-    ref = Ref(store: context.store, itemKey: UniqueKey());
+    _ref = Ref(store: context.store, itemKey: UniqueKey());
     super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    // TODO handle when parent ItemStore changes
+    _ref = Ref(
+      store: context.store,
+      itemKey: _ref.itemKey,
+      localStore: _ref.local,
+    );
+    super.didChangeDependencies();
   }
 
   @override
   @protected
   @mustCallSuper
   void dispose() {
-    ref.disposeSelf();
+    _ref.disposeSelf();
     super.dispose();
   }
 }
