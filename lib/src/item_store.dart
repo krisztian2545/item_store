@@ -69,7 +69,7 @@ class ItemStore {
       tag: tag,
     );
 
-    final ref = Ref(store: this, itemKey: key);
+    final ref = Ref(store: this, itemKey: key, itemTag: tag);
     final result = itemFactory(ref);
 
     // dispose the local store of an item on its disposal
@@ -131,6 +131,7 @@ class Ref {
   Ref({
     required ItemStore store,
     required this.itemKey,
+    this.itemTag,
     LocalItemStore? localStore,
   })  : _store = store,
         local = localStore ?? LocalItemStore(ItemStore());
@@ -144,7 +145,11 @@ class Ref {
   /// boilerplate.
   final LocalItemStore local; // = LocalItemStore(ItemStore());
 
+  /// The global key of the item.
   final Object itemKey;
+
+  /// The tag of the item if not null.
+  final Object? itemTag;
 
   final ItemMetaData _itemMetaData = ItemMetaData();
 

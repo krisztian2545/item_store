@@ -1,22 +1,54 @@
+import 'package:flutter/widgets.dart';
 import 'package:item_store/item_store.dart';
-import 'package:provider/provider.dart';
+import 'package:item_store_flutter/src/inherited_item_store.dart';
 
-class ItemStoreProvider extends Provider<ItemStore> {
-  ItemStoreProvider({
+class ItemStoreProvider extends StatefulWidget {
+  const ItemStoreProvider({
     super.key,
-    super.child,
-    super.lazy,
-    super.builder,
-  }) : super(
-          create: (_) => ItemStore(),
-          dispose: (context, store) => store.dispose(),
+    this.child,
+    this.builder,
+  })  : store = null,
+        assert(
+          child != null || builder != null,
+          "Either child or builder must be given.",
         );
 
-  ItemStoreProvider.value({
+  const ItemStoreProvider.value({
     super.key,
-    required super.value,
-    super.child,
-    super.builder,
-    super.updateShouldNotify,
-  }) : super.value();
+    required ItemStore this.store,
+    this.child,
+    this.builder,
+  }) : assert(
+          child != null || builder != null,
+          "Either child or builder must be given.",
+        );
+
+  final ItemStore? store;
+
+  final Widget? child;
+  final Widget Function(BuildContext, Widget?)? builder;
+
+  @override
+  State<ItemStoreProvider> createState() => _ItemStoreProviderState();
+}
+
+class _ItemStoreProviderState extends State<ItemStoreProvider> {
+  late final ItemStore _store = widget.store ?? ItemStore();
+
+  @override
+  void dispose() {
+    // dispose store if it wasn't injected from outside
+    if (widget.store == null) {
+      _store.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return InheritedItemStore(
+      store: _store,
+      child: widget.builder?.call(context, widget.child) ?? widget.child!,
+    );
+  }
 }
