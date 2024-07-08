@@ -127,15 +127,6 @@ extension type LocalItemStore(ItemStore _store) implements ItemStore {
       _store.get<T>(itemFactory, globalKey: globalKey, tag: tag);
 }
 
-asd() {
-  final a = Ref(store: ItemStore(), itemKey: '');
-  final b = Ref(
-    store: ItemStore(),
-    itemKey: a.itemKey,
-    localStore: a.local,
-  );
-}
-
 class Ref {
   Ref({
     required ItemStore store,

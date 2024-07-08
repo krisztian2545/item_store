@@ -16,7 +16,6 @@ mixin WidgetRefMixin<T extends StatefulWidget> on State<T> {
 
   @override
   void didChangeDependencies() {
-    // TODO handle when parent ItemStore changes
     _ref = Ref(
       store: context.store,
       itemKey: _ref.itemKey,
