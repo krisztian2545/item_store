@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:item_store/item_store.dart';
+import 'package:item_store_flutter/src/widget_ref.dart';
 import 'package:item_store_flutter/src/widget_ref_mixin.dart';
 
 abstract class ItemConsumer extends StatefulWidget {
   const ItemConsumer({super.key});
 
-  Widget build(BuildContext context, Ref ref);
+  Widget build(BuildContext context, WidgetRef ref);
 
   @override
   State<ItemConsumer> createState() => _ItemConsumerState();

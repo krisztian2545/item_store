@@ -1,12 +1,11 @@
 import 'package:flutter/widgets.dart';
-import 'package:item_store/item_store.dart';
 import 'package:item_store_flutter/src/context_extensions.dart';
-import 'package:item_store_flutter/src/inherited_item_store.dart';
+import 'package:item_store_flutter/src/widget_ref.dart';
 
 mixin WidgetRefMixin<T extends StatefulWidget> on State<T> {
-  late Ref _ref;
-  // TODO create a different WidgetRef
-  Ref get ref => _ref;
+  late WidgetRef _ref;
+
+  WidgetRef get ref => _ref;
 
   bool _firstBuild = true;
 
@@ -14,7 +13,7 @@ mixin WidgetRefMixin<T extends StatefulWidget> on State<T> {
   @protected
   @mustCallSuper
   void initState() {
-    _ref = Ref(store: context.readStore, itemKey: UniqueKey());
+    _ref = WidgetRef(store: context.readStore);
     super.initState();
   }
 
@@ -25,11 +24,8 @@ mixin WidgetRefMixin<T extends StatefulWidget> on State<T> {
       context.store;
       _firstBuild = false;
     } else {
-      _ref = Ref(
-        store: context.store,
-        itemKey: _ref.itemKey,
-        localStore: _ref.local,
-      );
+      // ignore: invalid_use_of_protected_member
+      _ref.updateStore(context.store);
     }
     super.didChangeDependencies();
   }
@@ -38,7 +34,8 @@ mixin WidgetRefMixin<T extends StatefulWidget> on State<T> {
   @protected
   @mustCallSuper
   void dispose() {
-    _ref.disposeSelf();
+    // ignore: invalid_use_of_protected_member
+    _ref.dispose();
     super.dispose();
   }
 }

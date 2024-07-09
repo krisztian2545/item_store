@@ -17,7 +17,7 @@ class Ref {
   ///
   /// It also adds a convenience call method for [ItemStoreUtilX.get] to reduce
   /// boilerplate.
-  final LocalItemStore local; // = LocalItemStore(ItemStore());
+  final LocalItemStore local;
 
   /// The global key of the item.
   final Object itemKey;

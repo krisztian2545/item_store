@@ -9,10 +9,10 @@ class ItemBuilder extends ItemConsumer {
   });
 
   final Widget? child;
-  final Widget Function(BuildContext, Ref, Widget?) builder;
+  final Widget Function(BuildContext, WidgetRef, Widget?) builder;
 
   @override
-  Widget build(BuildContext context, Ref ref) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return builder(context, ref, child);
   }
 }
