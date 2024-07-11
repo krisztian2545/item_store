@@ -16,6 +16,8 @@ class ItemHandler extends StatefulWidget {
   final Widget? child;
   final Widget Function(BuildContext, Widget?)? builder;
 
+  /// Initialize store items here.
+  /// It's called inside the [State.didChangeDependencies] method.
   final void Function(ItemStore)? init;
 
   /// A list of global keys of items, that you want to dispose
@@ -27,10 +29,33 @@ class ItemHandler extends StatefulWidget {
 }
 
 class _ItemHandlerState extends State<ItemHandler> {
+  late ItemStore _store;
+
   @override
-  void initState() {
-    super.initState();
-    widget.init?.call(context.store);
+  void didUpdateWidget(covariant ItemHandler oldWidget) {
+    if (oldWidget.init != widget.init) {
+      widget.init?.call(_store);
+    }
+
+    // prevent memory leaks
+    final leaks = oldWidget.disposables?.where(
+      (d) => !(widget.disposables?.contains(d) ?? false),
+    );
+    _disposeItems(leaks);
+
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
+  void didChangeDependencies() {
+    // dispose items in the old store?
+    // _disposeItems(widget.disposables);
+
+    // update store and recall init
+    _store = context.store;
+    widget.init?.call(_store);
+
+    super.didChangeDependencies();
   }
 
   @override
@@ -38,11 +63,15 @@ class _ItemHandlerState extends State<ItemHandler> {
     return widget.builder?.call(context, widget.child) ?? widget.child!;
   }
 
+  void _disposeItems(Iterable<Object>? disposables) {
+    if (disposables?.isNotEmpty ?? false) {
+      _store.disposeItems(disposables!);
+    }
+  }
+
   @override
   void dispose() {
-    if (widget.disposables?.isNotEmpty ?? false) {
-      context.store.disposeItems(widget.disposables!);
-    }
+    _disposeItems(widget.disposables);
     super.dispose();
   }
 }

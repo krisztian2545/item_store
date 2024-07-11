@@ -33,7 +33,17 @@ class ItemStoreProvider extends StatefulWidget {
 }
 
 class _ItemStoreProviderState extends State<ItemStoreProvider> {
-  late final ItemStore _store = widget.store ?? ItemStore();
+  late ItemStore _store = _getStore();
+
+  ItemStore _getStore() => widget.store ?? ItemStore();
+
+  @override
+  void didUpdateWidget(covariant ItemStoreProvider oldWidget) {
+    if (oldWidget.store != widget.store) {
+      _store = _getStore();
+    }
+    super.didUpdateWidget(oldWidget);
+  }
 
   @override
   void dispose() {
