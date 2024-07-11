@@ -3,19 +3,11 @@ import 'package:item_store_flutter/src/context_extensions.dart';
 import 'package:item_store_flutter/src/widget_ref.dart';
 
 mixin WidgetRefMixin<T extends StatefulWidget> on State<T> {
-  late WidgetRef _ref;
+  late final WidgetRef _ref = WidgetRef(store: context.readStore);
 
   WidgetRef get ref => _ref;
 
   bool _firstBuild = true;
-
-  @override
-  @protected
-  @mustCallSuper
-  void initState() {
-    _ref = WidgetRef(store: context.readStore);
-    super.initState();
-  }
 
   @override
   void didChangeDependencies() {
