@@ -5,15 +5,38 @@ typedef ItemFactory<T> = T Function(Ref);
 
 typedef ItemCacheMap = Map<Object, Item>;
 
+typedef OverridesMap = Map<ItemFactory, ItemFactory>;
+typedef OverrideRecord<T> = (ItemFactory<T>, ItemFactory<T>);
+typedef OverridesList = List<OverrideRecord>;
+
+// class FactoryOverride<T> {
+//   FactoryOverride(this.from, this.to);
+//   final ItemFactory<T> from;
+//   final ItemFactory<T> to;
+// }
+
+asd() {
+  int counter(Ref ref) => 5;
+  String label(Ref ref) => '0';
+
+  final store = ItemStore(overrides: [
+    (counter, label),
+  ]);
+
+  store.override(counter, label);
+}
+
 class ItemStore {
-  ItemStore() : _cache = {};
+  ItemStore({OverridesList? overrides}) : _cache = {} {
+    _initOverrides(overrides);
+  }
 
-  ItemStore.fromMap(ItemCacheMap map) : _cache = map;
+  ItemStore.from(ItemCacheMap map, {OverridesList? overrides}) : _cache = map {
+    _initOverrides(overrides);
+  }
 
-  final ItemCacheMap _cache;
-
-  /// Please don't use this unless you really have to.
-  ItemCacheMap get cache => _cache;
+  static const _assertFactoryOverrideReturnTypeMessage =
+      "Can't override an item factory with different return type!";
 
   /// Helper function to determine your global key.
   ///
@@ -47,6 +70,25 @@ class ItemStore {
         'At least one of itemFactory or globalKey must not be null');
   }
 
+  void _initOverrides(OverridesList? overrides) {
+    if (overrides?.isNotEmpty ?? false) {
+      _overrides.addEntries(overrides!.map((e) {
+        assert(
+          e.$1.runtimeType == e.$2.runtimeType,
+          _assertFactoryOverrideReturnTypeMessage,
+        );
+        return MapEntry(e.$1, e.$2);
+      }));
+    }
+  }
+
+  final ItemCacheMap _cache;
+
+  /// Please don't use this unless you really have to.
+  ItemCacheMap get cache => _cache;
+
+  final OverridesMap _overrides = {};
+
   /// Creates an object by calling [itemFactory] and writes it into the cache
   /// with a global key, by which you can get it back later with [read].
   /// If there is an object cached with the same global key, then it will be
@@ -61,7 +103,7 @@ class ItemStore {
     );
 
     final ref = Ref(store: this, itemKey: key, itemTag: tag);
-    final result = itemFactory(ref);
+    final result = _overrides[itemFactory]?.call(ref) ?? itemFactory(ref);
 
     // dispose the local store of an item on its disposal
     ref.onDispose(() => ref.local.dispose());
@@ -85,6 +127,30 @@ class ItemStore {
     item.dispose();
 
     _cache.remove(globalKey);
+  }
+
+  /// Overrides the [from] factory with the [to] factory. So when creating
+  /// an item (whether trough [create] or [get]), the [to] factory will be
+  /// used instead of the original one, even if both an itemFactory and a
+  /// global key is given.
+  ///
+  /// The overriding factory must have the same return type as the original one.
+  ///
+  /// If an item is already created with the original factory, it won't be affected
+  /// by this override.
+  ///
+  /// This overrides an item factory (not a value of a key). If you just want
+  /// to override the value of a key, consider using [create] instead.
+  void override<T>(ItemFactory<T> from, ItemFactory<T> to) {
+    assert(
+      from.runtimeType == to.runtimeType,
+      _assertFactoryOverrideReturnTypeMessage,
+    );
+    _overrides[from] = to;
+  }
+
+  void removeOverrideFrom(ItemFactory factory) {
+    _overrides.remove(factory);
   }
 
   /// Calls [disposeItem] for each key in [globalKeys].

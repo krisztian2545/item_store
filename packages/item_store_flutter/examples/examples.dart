@@ -77,3 +77,46 @@ class CounterWidget extends ItemConsumer {
     );
   }
 }
+
+// // ItemFactory settingsFactory(_) => settingsProduction;
+// ItemFactory settingsProvider = settingsProduction;
+
+Map settingsDevelopment(Ref ref) => {'flavor': 'dev'};
+Map settingsProduction(Ref ref) => {'flavor': 'prod'};
+
+// // Map settingsProvider(Ref ref) {
+// //   return ref(settingsFactory)(ref);
+// // }
+
+// void init() {
+//   final store = ItemStore();
+
+//   // gets production settings
+//   store.get(settingsProvider);
+//   // store.get(store.get(settingsFactory));
+
+//   // override settings provider factory
+//   settingsProvider = settingsDevelopment;
+//   store.disposeItem(settingsProvider);
+//   // store.create((_) => settingsDevelopment, globalKey: settingsFactory);
+//   // store.disposeItem(settingsFactory);
+
+//   // gets development settings
+//   store.get(settingsProvider);
+//   // store.get(settingsFactory);
+// }
+
+final settingsProvider = settingsProduction;
+
+void init() {
+  final store = ItemStore();
+
+  // gets production settings
+  print(store.get(settingsProvider));
+
+  store.override(settingsProvider, settingsDevelopment);
+  store.disposeItem(settingsProvider);
+
+  // gets development settings
+  print(store.get(settingsProvider));
+}
