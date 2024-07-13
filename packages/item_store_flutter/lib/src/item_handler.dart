@@ -31,6 +31,38 @@ class ItemHandler extends StatefulWidget {
 class _ItemHandlerState extends State<ItemHandler> {
   late ItemStore _store;
 
+  late void Function() _onDidChangeDependencies = _onFirstCallToDidChangeDeps;
+
+  void _onFirstCallToDidChangeDeps() {
+    // Items are not disposed on first build to let you decide whether to reuse
+    // an item from the inherited store.
+
+    // listen to inherited store and call widget.init
+    _getStoreAndInit();
+
+    // run the other function on consequent dependency change calls
+    _onDidChangeDependencies = _onConsequentCallsToDidChangeDeps;
+  }
+
+  void _onConsequentCallsToDidChangeDeps() {
+    // dispose items in the old store
+    _disposeItems(widget.disposables);
+
+    // listen to new inherited store and recall widget.init
+    _getStoreAndInit();
+  }
+
+  void _getStoreAndInit() {
+    _store = context.store;
+    widget.init?.call(_store);
+  }
+
+  @override
+  void didChangeDependencies() {
+    _onDidChangeDependencies();
+    super.didChangeDependencies();
+  }
+
   @override
   void didUpdateWidget(covariant ItemHandler oldWidget) {
     if (oldWidget.init != widget.init) {
@@ -44,18 +76,6 @@ class _ItemHandlerState extends State<ItemHandler> {
     _disposeItems(leaks);
 
     super.didUpdateWidget(oldWidget);
-  }
-
-  @override
-  void didChangeDependencies() {
-    // dispose items in the old store?
-    // _disposeItems(widget.disposables);
-
-    // update store and recall init
-    _store = context.store;
-    widget.init?.call(_store);
-
-    super.didChangeDependencies();
   }
 
   @override

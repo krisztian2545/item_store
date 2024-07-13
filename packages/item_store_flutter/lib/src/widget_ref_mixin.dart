@@ -26,18 +26,24 @@ mixin WidgetRefMixin<T extends StatefulWidget> on State<T> {
 
   WidgetRef get ref => _ref;
 
-  bool _firstBuild = true;
+  late void Function() _onDidChangeDependencies = _onFirstCallToDidChangeDeps;
+
+  void _onFirstCallToDidChangeDeps() {
+    // listen for item store changes
+    context.store;
+
+    // run the other function on consequent dependency change calls
+    _onDidChangeDependencies = _onConsequentCallsToDidChangeDeps;
+  }
+
+  void _onConsequentCallsToDidChangeDeps() {
+    // ignore: invalid_use_of_protected_member
+    _ref.updateStore(context.store);
+  }
 
   @override
   void didChangeDependencies() {
-    if (_firstBuild) {
-      // listen for item store changes
-      context.store;
-      _firstBuild = false;
-    } else {
-      // ignore: invalid_use_of_protected_member
-      _ref.updateStore(context.store);
-    }
+    _onDidChangeDependencies();
     super.didChangeDependencies();
   }
 
