@@ -2,11 +2,51 @@ import 'package:flutter/widgets.dart';
 import 'package:item_store/item_store.dart';
 import 'package:item_store_flutter/src/inherited_item_store.dart';
 
+typedef ItemStoreDisposeBehaviorCallback = void Function(
+    ItemStoreProvider widget, ItemStore store);
+
+abstract class ItemStoreProviderDisposeBehavior {
+  const ItemStoreProviderDisposeBehavior();
+  void dispose(ItemStoreProvider widget, ItemStore store);
+}
+
+class ItemStoreDisposeBehavior extends ItemStoreProviderDisposeBehavior {
+  const ItemStoreDisposeBehavior._(this.callback);
+
+  const ItemStoreDisposeBehavior.from(this.callback);
+
+  final void Function(ItemStoreProvider widget, ItemStore store) callback;
+
+  @override
+  void dispose(ItemStoreProvider widget, ItemStore store) =>
+      callback(widget, store);
+}
+
+class AlwaysDisposeItemStore extends ItemStoreProviderDisposeBehavior {
+  const AlwaysDisposeItemStore();
+  @override
+  void dispose(ItemStoreProvider widget, ItemStore store) {
+    store.dispose();
+  }
+}
+
+class DoNotDisposeGivenItemStore extends ItemStoreProviderDisposeBehavior {
+  const DoNotDisposeGivenItemStore();
+  @override
+  void dispose(ItemStoreProvider widget, ItemStore store) {
+    // dispose store if it wasn't injected from outside
+    if (widget.store == null) {
+      store.dispose();
+    }
+  }
+}
+
 class ItemStoreProvider extends StatefulWidget {
   const ItemStoreProvider({
     super.key,
     this.child,
     this.builder,
+    this.disposeBehavior = const DoNotDisposeGivenItemStore(),
   })  : store = null,
         assert(
           child != null || builder != null,
@@ -18,6 +58,7 @@ class ItemStoreProvider extends StatefulWidget {
     required ItemStore this.store,
     this.child,
     this.builder,
+    this.disposeBehavior = const DoNotDisposeGivenItemStore(),
   }) : assert(
           child != null || builder != null,
           "Either child or builder must be given.",
@@ -27,6 +68,8 @@ class ItemStoreProvider extends StatefulWidget {
 
   final Widget? child;
   final Widget Function(BuildContext, Widget?)? builder;
+
+  final ItemStoreProviderDisposeBehavior disposeBehavior;
 
   @override
   State<ItemStoreProvider> createState() => _ItemStoreProviderState();
@@ -47,10 +90,7 @@ class _ItemStoreProviderState extends State<ItemStoreProvider> {
 
   @override
   void dispose() {
-    // dispose store if it wasn't injected from outside
-    if (widget.store == null) {
-      _store.dispose();
-    }
+    widget.disposeBehavior.dispose(widget, _store);
     super.dispose();
   }
 
