@@ -2,9 +2,9 @@ import 'package:item_store/item_store.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('ItemStore', () {
-    (ItemStore, String) initStoreAndKey() => (ItemStore(), 'key');
+  (ItemStore, String) initStoreAndKey() => (ItemStore(), 'key');
 
+  group('ItemStore', () {
     test('create', () {
       final (store, key) = initStoreAndKey();
       final item = store.create((_) => 42, globalKey: key);
@@ -20,6 +20,18 @@ void main() {
     test('get', () {
       final (store, key) = initStoreAndKey();
       expect(store.get<int>((_) => 42, globalKey: key), 42);
+    });
+  });
+
+  group('Ref', () {
+    test('onDispose', () {
+      final (store, key) = initStoreAndKey();
+      final factory = (Ref ref) {
+        ref.onDispose(() => print('disposing...'));
+        return 42;
+      };
+      store.create(factory, globalKey: key);
+      store.disposeItem(key);
     });
   });
 }

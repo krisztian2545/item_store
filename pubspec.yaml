@@ -1,6 +1,6 @@
 name: item_store
 description: A sample command-line application.
-version: 1.4.0
+version: 1.5.0
 repository: https://github.com/krisztian2545/item_store
 
 environment:
