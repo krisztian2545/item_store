@@ -14,7 +14,8 @@ class Item<T> {
 }
 
 class ItemMetaData {
-  ItemMetaData({this.disposeCallbacks = const []});
+  ItemMetaData({List<ItemDisposeCallback>? disposeCallbacks})
+      : disposeCallbacks = disposeCallbacks ?? [];
 
   final List<ItemDisposeCallback> disposeCallbacks;
 }
