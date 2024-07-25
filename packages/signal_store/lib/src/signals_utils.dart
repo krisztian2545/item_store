@@ -5,36 +5,78 @@ ItemFactory<Signal<T>> signalFactory<T>(
   T value, {
   String? debugLabel,
   bool autoDispose = false,
-}) {
-  return (Ref ref) => ref.registerDisposable(signal(
-        value,
-        debugLabel: debugLabel,
-        autoDispose: autoDispose,
-      )..onDispose(() => ref.disposeSelf()));
-}
+}) =>
+    (Ref ref) => ref.bindToDisposable(
+          signal(
+            value,
+            debugLabel: debugLabel,
+            autoDispose: autoDispose,
+          ),
+        );
 
 ItemFactory<Signal<T>> signalFactoryBuilder<T>(
   T Function(Ref) builder, {
   String? debugLabel,
   bool autoDispose = false,
-}) {
-  return (Ref ref) => ref.registerDisposable(signal(
-        builder(ref),
-        debugLabel: debugLabel,
-        autoDispose: autoDispose,
-      )..onDispose(() => ref.disposeSelf()));
-}
+}) =>
+    (Ref ref) => ref.bindToDisposable(
+          signal(
+            builder(ref),
+            debugLabel: debugLabel,
+            autoDispose: autoDispose,
+          ),
+        );
+
+ItemFactory<FutureSignal<T>> futureSignalFactory<T>(
+  Future<T> asyncValue, {
+  T? initialValue,
+  String? debugLabel,
+  List<ReadonlySignal<dynamic>> dependencies = const [],
+  bool lazy = true,
+  bool autoDispose = false,
+}) =>
+    (ref) => ref.bindToDisposable(
+          futureSignal(
+            () async => asyncValue,
+            initialValue: initialValue,
+            debugLabel: debugLabel,
+            dependencies: dependencies,
+            lazy: lazy,
+            autoDispose: autoDispose,
+          ),
+        );
+
+ItemFactory<FutureSignal<T>> futureSignalFactoryBuilder<T>(
+  Future<T> Function() Function(Ref) callbackBuilder, {
+  T? initialValue,
+  String? debugLabel,
+  List<ReadonlySignal<dynamic>> dependencies = const [],
+  bool lazy = true,
+  bool autoDispose = false,
+}) =>
+    (ref) => ref.bindToDisposable(
+          futureSignal(
+            callbackBuilder(ref),
+            initialValue: initialValue,
+            debugLabel: debugLabel,
+            dependencies: dependencies,
+            lazy: lazy,
+            autoDispose: autoDispose,
+          ),
+        );
 
 ItemFactory<Computed<T>> computedFactory<T>(
   T Function() Function(Ref) computeBuilder, {
   String? debugLabel,
   bool autoDispose = false,
 }) =>
-    (Ref ref) => ref.registerDisposable(computed(
-          computeBuilder(ref),
-          debugLabel: debugLabel,
-          autoDispose: autoDispose,
-        )..onDispose(() => ref.disposeSelf()));
+    (Ref ref) => ref.bindToDisposable(
+          computed(
+            computeBuilder(ref),
+            debugLabel: debugLabel,
+            autoDispose: autoDispose,
+          ),
+        );
 
 ItemFactory<void Function()> effectFactory(
   void Function() Function(Ref) computeBuilder, {
@@ -72,4 +114,6 @@ extension SignalsRefUtilsX on Ref {
 
     return cleanup;
   }
+
+  // void Function()
 }
