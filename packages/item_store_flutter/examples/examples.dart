@@ -30,9 +30,15 @@ import 'package:item_store_flutter/item_store_flutter.dart';
   return (() => state, (newState) => state = newState);
 }
 
+/// Combine with a global key, to prevent state recreation.
 (T Function(), void Function(T)) Function(Ref) createStateFactory<T>(
     T initialValue) {
   return (_) => createState(initialValue);
+}
+
+// or create dedicated factory
+(T Function(), void Function(T)) Function(Ref) countState<T>(T initialData) {
+  return (_) => createState(initialData);
 }
 
 T? Function(T) previousValueHolder<T>(Ref ref) {

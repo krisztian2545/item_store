@@ -7,7 +7,7 @@ ItemFactory<Signal<T>> signalFactory<T>(
   bool autoDispose = false,
 }) =>
     (Ref ref) => ref.bindToDisposable(
-          signal(
+          Signal<T>(
             value,
             debugLabel: debugLabel,
             autoDispose: autoDispose,
@@ -20,7 +20,7 @@ ItemFactory<Signal<T>> signalFactoryBuilder<T>(
   bool autoDispose = false,
 }) =>
     (Ref ref) => ref.bindToDisposable(
-          signal(
+          Signal<T>(
             builder(ref),
             debugLabel: debugLabel,
             autoDispose: autoDispose,
@@ -36,7 +36,7 @@ ItemFactory<FutureSignal<T>> futureSignalFactory<T>(
   bool autoDispose = false,
 }) =>
     (ref) => ref.bindToDisposable(
-          futureSignal(
+          FutureSignal<T>(
             () async => asyncValue,
             initialValue: initialValue,
             debugLabel: debugLabel,
@@ -55,7 +55,7 @@ ItemFactory<FutureSignal<T>> futureSignalFactoryBuilder<T>(
   bool autoDispose = false,
 }) =>
     (ref) => ref.bindToDisposable(
-          futureSignal(
+          FutureSignal<T>(
             callbackBuilder(ref),
             initialValue: initialValue,
             debugLabel: debugLabel,
@@ -64,56 +64,3 @@ ItemFactory<FutureSignal<T>> futureSignalFactoryBuilder<T>(
             autoDispose: autoDispose,
           ),
         );
-
-ItemFactory<Computed<T>> computedFactory<T>(
-  T Function() Function(Ref) computeBuilder, {
-  String? debugLabel,
-  bool autoDispose = false,
-}) =>
-    (Ref ref) => ref.bindToDisposable(
-          computed(
-            computeBuilder(ref),
-            debugLabel: debugLabel,
-            autoDispose: autoDispose,
-          ),
-        );
-
-ItemFactory<void Function()> effectFactory(
-  void Function() Function(Ref) computeBuilder, {
-  String? debugLabel,
-  dynamic Function()? onDispose,
-}) =>
-    (Ref ref) {
-      final cleanup = effect(
-        computeBuilder(ref),
-        debugLabel: debugLabel,
-        onDispose: () {
-          onDispose?.call();
-          ref.disposeSelf();
-        },
-      );
-
-      ref.onDispose(cleanup);
-
-      return cleanup;
-    };
-
-extension SignalsRefUtilsX on Ref {
-  void Function() disposableEffect(
-    void Function() compute, {
-    String? debugLabel,
-    dynamic Function()? onDispose,
-  }) {
-    final cleanup = effect(
-      compute,
-      debugLabel: debugLabel,
-      onDispose: onDispose,
-    );
-
-    this.onDispose(cleanup);
-
-    return cleanup;
-  }
-
-  // void Function()
-}
