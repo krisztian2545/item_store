@@ -9,23 +9,6 @@ typedef OverridesMap = Map<ItemFactory, ItemFactory>;
 typedef OverrideRecord<T> = (ItemFactory<T>, ItemFactory<T>);
 typedef OverridesList = List<OverrideRecord>;
 
-// class FactoryOverride<T> {
-//   FactoryOverride(this.from, this.to);
-//   final ItemFactory<T> from;
-//   final ItemFactory<T> to;
-// }
-
-asd() {
-  int counter(Ref ref) => 5;
-  String label(Ref ref) => '0';
-
-  final store = ItemStore(overrides: [
-    (counter, label),
-  ]);
-
-  store.override(counter, label);
-}
-
 class ItemStore {
   ItemStore({OverridesList? overrides}) : _cache = {} {
     _initOverrides(overrides);
