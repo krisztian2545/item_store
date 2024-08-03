@@ -88,8 +88,13 @@ class ItemStore {
     final ref = Ref(store: this, itemKey: key, itemTag: tag);
     final result = _overrides[itemFactory]?.call(ref) ?? itemFactory(ref);
 
-    // dispose the local store of an item on its disposal
+    // schedule the disposal of the item's local store
     ref.onDispose(() => ref.local.dispose());
+
+    // dispose old item stored with same key
+    if (_cache.containsKey(key)) {
+      disposeItem(key);
+    }
 
     _cache[key] = Item<T>(result, ref.itemMetaData);
 
