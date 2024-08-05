@@ -4,26 +4,26 @@ import 'item_store.dart';
 class Ref {
   Ref({
     required ItemStore store,
-    required this.itemKey,
-    this.itemTag,
-    LocalItemStore? localStore,
+    required this.globalKey,
+    this.tag,
+    CallableItemStore? localStore,
   })  : _store = store,
-        local = localStore ?? LocalItemStore(ItemStore());
+        local = localStore ?? CallableItemStore(SimpleItemStore());
 
   final ItemStore _store;
 
   /// An [ItemStore] exclusive to this [Ref], so you can reuse factory functions
   /// to create local data.
   ///
-  /// It also adds a convenience call method for [ItemStoreUtilX.get] to reduce
+  /// It also adds a convenience call method for [ItemStore.get] to reduce
   /// boilerplate.
-  final LocalItemStore local;
+  final CallableItemStore local;
 
   /// The global key of the item.
-  final Object itemKey;
+  final Object globalKey;
 
   /// The tag of the item if not null.
-  final Object? itemTag;
+  final Object? tag;
 
   final ItemMetaData itemMetaData = ItemMetaData();
 
@@ -36,7 +36,7 @@ class Ref {
 
   T read<T>(Object globalKey) => _store.read(globalKey);
 
-  void disposeSelf() => _store.disposeItem(itemKey);
+  void disposeSelf() => _store.disposeItem(globalKey);
 
   /// Adds [callback] to the list of dispose callbacks.
   void onDispose(ItemDisposeCallback callback) {
@@ -49,64 +49,51 @@ class Ref {
 }
 
 extension RefUtilsX on Ref {
-  /// Calls the provided object's dispose function on [onDispose].
-  /// [disposable] must have a void dispose() function.
-  T registerDisposable<T extends Object>(T disposable,
-      {bool assertCompatibility = true}) {
-    void bind(o) {
-      // dispose object when being removed from the store
-      onDispose(o.dispose);
-    }
+  /// Binds the provided [object] to the [onDispose] callback, allowing it to be
+  /// disposed when the item gets disposed.
+  ///
+  /// The [object] either has to have a void dispose() function, or
+  /// provide a custom [dispose] function that will be called instead.
+  ///
+  /// Returns the provided [object].
+  T disposable<T extends Object>(T object, [void Function(T)? dispose]) {
+    // dispose object when the item is being removed from the store
+    onDispose(
+      dispose == null ? (object as dynamic).dispose : () => dispose(object),
+    );
 
-    if (assertCompatibility) {
-      bind(disposable);
-    } else {
-      try {
-        bind(disposable);
-      } catch (e) {
-        // disposable doesn't have a void dispose() function.
-      }
-    }
-
-    return disposable;
+    return object;
   }
 
-  /// Alias for [registerDisposable].
-  T d<T extends Object>(T disposable) => registerDisposable(disposable);
-
-  /// Bind the given [disposable] object to this ref, meaning if any of them gets disposed,
+  /// Bind the given [object] object to this ref, meaning if any of them gets disposed,
   /// both of them will be disposed.
   ///
-  /// [disposable] must have:
-  /// - a void dispose() function,
-  /// - a void onDispose(void Function()) function.
-  ///
-  /// If [assertCompatibility] is false, no error will be thrown when
-  /// [disposable] doesn't have one or all of the required functions.
+  /// [object] must have:
+  /// - a void dispose() function or provide [disposeObject],
+  /// - a void onDispose(void Function()) function or provide [disposeItem].
   ///
   /// See also:
-  /// - [registerDisposable] for one way binding,
+  /// - [disposable] for one way binding,
   /// - [DisposableMixin] to add the required functions to your class.
-  T bindToDisposable<T>(T disposable, {bool assertCompatibility = true}) {
-    void bind(o) {
-      // dispose object when being removed from the store
-      onDispose(o.dispose);
+  T bindTo<T>(
+    T object, {
+    void Function(T)? disposeObject,
+    void Function(void Function())? disposeItem,
+  }) {
+    // dispose object when the item is being removed from the store
+    onDispose(
+      disposeObject == null
+          ? (object as dynamic).dispose
+          : () => disposeObject(object),
+    );
 
-      // dispose item from the store, when object gets disposed
-      o.onDispose(disposeSelf);
-    }
-
-    if (assertCompatibility) {
-      bind(disposable);
+    // dispose item from the store, when object gets disposed
+    if (disposeItem == null) {
+      (object as dynamic).onDispose(disposeSelf);
     } else {
-      try {
-        bind(disposable);
-      } catch (e) {
-        // disposable doesn't have a void dispose() function
-        // or doesn't accept an onDispose callback.
-      }
+      disposeItem(disposeSelf);
     }
 
-    return disposable;
+    return object;
   }
 }

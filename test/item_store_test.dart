@@ -30,12 +30,15 @@ void main() {
   group('Ref', () {
     test('onDispose', () {
       final (store, key) = initStoreAndKey();
+      bool disposed = false;
       final factory = (Ref ref) {
-        ref.onDispose(() => print('disposing...'));
+        ref.onDispose(() => disposed = true);
         return 42;
       };
       store.create(factory, globalKey: key);
       store.disposeItem(key);
+
+      expect(disposed, true);
     });
   });
 
