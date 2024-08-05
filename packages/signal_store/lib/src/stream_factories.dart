@@ -11,7 +11,7 @@ ItemFactory<StreamSignal<T>> streamSignalFactory<T>(
   bool lazy = true,
   bool autoDispose = false,
 }) =>
-    (ref) => ref.bindToDisposable(
+    (ref) => ref.bindTo(
           StreamSignal<T>(
             callbackBuilder(ref),
             initialValue: initialValue,

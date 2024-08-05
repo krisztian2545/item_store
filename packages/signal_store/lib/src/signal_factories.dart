@@ -6,7 +6,7 @@ ItemFactory<Signal<T>> signalFactory<T>(
   String? debugLabel,
   bool autoDispose = false,
 }) =>
-    (Ref ref) => ref.bindToDisposable(
+    (Ref ref) => ref.bindTo(
           Signal<T>(
             value,
             debugLabel: debugLabel,
@@ -19,7 +19,7 @@ ItemFactory<Signal<T>> signalFactoryBuilder<T>(
   String? debugLabel,
   bool autoDispose = false,
 }) =>
-    (Ref ref) => ref.bindToDisposable(
+    (Ref ref) => ref.bindTo(
           Signal<T>(
             builder(ref),
             debugLabel: debugLabel,
@@ -35,7 +35,7 @@ ItemFactory<FutureSignal<T>> futureSignalFactory<T>(
   bool lazy = true,
   bool autoDispose = false,
 }) =>
-    (ref) => ref.bindToDisposable(
+    (ref) => ref.bindTo(
           FutureSignal<T>(
             () async => asyncValue,
             initialValue: initialValue,
@@ -54,7 +54,7 @@ ItemFactory<FutureSignal<T>> futureSignalFactoryBuilder<T>(
   bool lazy = true,
   bool autoDispose = false,
 }) =>
-    (ref) => ref.bindToDisposable(
+    (ref) => ref.bindTo(
           FutureSignal<T>(
             callbackBuilder(ref),
             initialValue: initialValue,

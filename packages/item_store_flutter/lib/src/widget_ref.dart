@@ -4,9 +4,9 @@ import 'package:item_store/item_store.dart';
 class WidgetRef with DisposableMixin {
   WidgetRef({
     required ItemStore store,
-    LocalItemStore? localStore,
+    CallableItemStore? localStore,
   })  : _store = store,
-        local = localStore ?? LocalItemStore(ItemStore());
+        local = localStore ?? CallableItemStore(ItemStore());
 
   ItemStore _store;
 
@@ -18,7 +18,7 @@ class WidgetRef with DisposableMixin {
   ///
   /// It also adds a convenience call method for [ItemStoreUtilX.get] to reduce
   /// boilerplate.
-  final LocalItemStore local;
+  final CallableItemStore local;
 
   T call<T>(ItemFactory<T> itemFactory, {Object? globalKey, Object? tag}) =>
       _store.get<T>(itemFactory, globalKey: globalKey, tag: tag);

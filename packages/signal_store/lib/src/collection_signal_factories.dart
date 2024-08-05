@@ -7,7 +7,7 @@ ItemFactory<ChangeStackSignal<T>> changeStackFactory<T>(
   int? limit,
   bool autoDispose = false,
 }) =>
-    (ref) => ref.bindToDisposable(
+    (ref) => ref.bindTo(
           ChangeStackSignal<T>(
             valueBuilder(ref),
             debugLabel: debugLabel,

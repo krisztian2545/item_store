@@ -6,7 +6,7 @@ ItemFactory<Computed<T>> computedFactory<T>(
   String? debugLabel,
   bool autoDispose = false,
 }) =>
-    (Ref ref) => ref.bindToDisposable(
+    (Ref ref) => ref.bindTo(
           Computed<T>(
             computeBuilder(ref),
             debugLabel: debugLabel,
@@ -22,7 +22,7 @@ ItemFactory<FutureSignal<T>> computedAsyncFactory<T>(
   bool lazy = true,
   bool autoDispose = false,
 }) =>
-    (ref) => ref.bindToDisposable(
+    (ref) => ref.bindTo(
           FutureSignal<T>(
             callbackBuilder(ref),
             initialValue: initialValue,
@@ -41,7 +41,7 @@ ItemFactory<FutureSignal<T>> computedFromFactory<T, A>(
   bool autoDispose = false,
   bool lazy = true,
 }) =>
-    (ref) => ref.bindToDisposable(
+    (ref) => ref.bindTo(
           computedFrom<T, A>(
             signals,
             callbackBuilder(ref),

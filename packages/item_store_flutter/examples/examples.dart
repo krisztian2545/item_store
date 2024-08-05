@@ -120,7 +120,7 @@ void init() {
   // gets production settings
   print(store.get(settingsProvider));
 
-  store.override(settingsProvider, settingsDevelopment);
+  store.overrideFactory(settingsProvider, settingsDevelopment);
   store.disposeItem(settingsProvider);
 
   // gets development settings
