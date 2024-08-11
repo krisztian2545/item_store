@@ -30,11 +30,22 @@ class Ref {
   T call<T>(ItemFactory<T> itemFactory, {Object? globalKey, Object? tag}) =>
       _store.get<T>(itemFactory, globalKey: globalKey, tag: tag);
 
+  T get<T>(ItemFactory<T> itemFactory, {Object? globalKey, Object? tag}) =>
+      _store.get<T>(itemFactory, globalKey: globalKey, tag: tag);
+
   T create<T>(ItemFactory<T> itemFactory, {Object? globalKey, Object? tag}) {
     return _store.create(itemFactory, globalKey: globalKey, tag: tag);
   }
 
   T read<T>(Object globalKey) => _store.read(globalKey);
+
+  T? readValue<T>([Object? tag]) =>
+      _store.read<T>(ItemStore.valueKeyFrom(T, tag: tag));
+
+  T createValue<T>(T value, {Object? tag}) => _store.create<T>(
+        (_) => value,
+        globalKey: ItemStore.valueKeyFrom(T, tag: tag),
+      );
 
   void disposeSelf() => _store.disposeItem(globalKey);
 

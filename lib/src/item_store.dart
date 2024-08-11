@@ -48,6 +48,9 @@ abstract interface class ItemStore {
         'At least one of itemFactory or globalKey must not be null');
   }
 
+  static Object valueKeyFrom(Type type, {Object? tag}) =>
+      tag == null ? type : (type, tag);
+
   /// Please don't use this unless you really have to.
   ItemCacheMap get cache;
 
@@ -69,6 +72,34 @@ abstract interface class ItemStore {
 
   /// [create]s an item or [read]s it if it's already cached.
   T get<T>(ItemFactory<T> itemFactory, {Object? globalKey, Object? tag});
+
+  /// Stores the given [value] with a global key of it's type ([T]), or as a
+  /// record consisting of [T] and [tag] if it's not null (like (T, tag)).
+  ///
+  /// Example:
+  /// ```dart
+  /// // without a tag
+  /// store.create((_) => "John", globalKey: String);
+  /// store.createValue<String>("John"); // achieves the same as above
+  /// // with a tag
+  /// store.create((_) => "John", globalKey: (String, "the second"));
+  /// store.createValue<String>("John", tag: "the second"); // achieves the same as above
+  /// ```
+  T createValue<T>(T value, {Object? tag});
+
+  /// Reads the cached value stored with a key that is either the [T] type,
+  /// or a record consisting of the type ([T]) and [tag] if it's not null (like (T, tag)).
+  ///
+  /// Example:
+  /// ```dart
+  /// store.createValue<Person>(Person("John"));
+  /// store.createValue<Person>(Person("Jane"), tag: "manager");
+  /// store.createValue<Person>(Person("Jack"), tag: "tester");
+  /// final person = store.readValue<Person>(); // John
+  /// final manager = store.readValue<Person>("manager"); // Jane
+  /// final tester = store.readValue<Person>("tester"); // Jack
+  /// ```
+  T? readValue<T>([Object? tag]);
 
   /// Disposes the item and then removes it from the cache.
   void disposeItem(Object globalKey);
@@ -177,6 +208,14 @@ class SimpleItemStore implements ItemStore {
     );
     return read<T>(key) ?? create(itemFactory, globalKey: key);
   }
+
+  @override
+  T? readValue<T>([Object? tag]) =>
+      read<T>(ItemStore.valueKeyFrom(T, tag: tag));
+
+  @override
+  T createValue<T>(T value, {Object? tag}) =>
+      create<T>((_) => value, globalKey: ItemStore.valueKeyFrom(T, tag: tag));
 
   /// Disposes the item and then removes it from the cache.
   @override
