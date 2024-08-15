@@ -64,14 +64,24 @@ abstract interface class ItemStore {
   /// overwritten.
   ///
   /// {@macro global_key_from}
-  T create<T>(ItemFactory<T> itemFactory, {Object? globalKey, Object? tag});
+  T create<T>(
+    ItemFactory<T> itemFactory, {
+    Object? globalKey,
+    Object? tag,
+    Object? args,
+  });
 
   /// Reads the cached value stored with [globalKey].
   /// You can calculate your global key with [globalKeyFrom].
   T? read<T>(Object globalKey);
 
   /// [create]s an item or [read]s it if it's already cached.
-  T get<T>(ItemFactory<T> itemFactory, {Object? globalKey, Object? tag});
+  T get<T>(
+    ItemFactory<T> itemFactory, {
+    Object? globalKey,
+    Object? tag,
+    Object? args,
+  });
 
   /// Stores the given [value] with a global key of it's type ([T]), or as a
   /// record consisting of [T] and [tag] if it's not null (like (T, tag)).
@@ -168,14 +178,19 @@ class SimpleItemStore implements ItemStore {
   ///
   /// {@macro global_key_from}
   @override
-  T create<T>(ItemFactory<T> itemFactory, {Object? globalKey, Object? tag}) {
+  T create<T>(
+    ItemFactory<T> itemFactory, {
+    Object? globalKey,
+    Object? tag,
+    Object? args,
+  }) {
     final key = ItemStore.globalKeyFrom(
       globalKey: globalKey,
       itemFactory: itemFactory,
       tag: tag,
     );
 
-    final ref = Ref(store: this, globalKey: key, tag: tag);
+    final ref = Ref(store: this, globalKey: key, tag: tag, args: args);
     final result = _overrides[itemFactory]?.call(ref) ?? itemFactory(ref);
 
     // schedule the disposal of the item's local store
@@ -200,13 +215,18 @@ class SimpleItemStore implements ItemStore {
 
   /// [create]s an item or [read]s it if it's already cached.
   @override
-  T get<T>(ItemFactory<T> itemFactory, {Object? globalKey, Object? tag}) {
+  T get<T>(
+    ItemFactory<T> itemFactory, {
+    Object? globalKey,
+    Object? tag,
+    Object? args,
+  }) {
     final key = ItemStore.globalKeyFrom(
       globalKey: globalKey,
       itemFactory: itemFactory,
       tag: tag,
     );
-    return read<T>(key) ?? create(itemFactory, globalKey: key);
+    return read<T>(key) ?? create(itemFactory, globalKey: key, args: args);
   }
 
   @override

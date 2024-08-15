@@ -6,6 +6,7 @@ class Ref {
     required ItemStore store,
     required this.globalKey,
     this.tag,
+    this.args,
     CallableItemStore? localStore,
   })  : _store = store,
         local = localStore ?? CallableItemStore(SimpleItemStore());
@@ -25,16 +26,38 @@ class Ref {
   /// The tag of the item if not null.
   final Object? tag;
 
+  final Object? args;
+
   final ItemMetaData itemMetaData = ItemMetaData();
 
-  T call<T>(ItemFactory<T> itemFactory, {Object? globalKey, Object? tag}) =>
-      _store.get<T>(itemFactory, globalKey: globalKey, tag: tag);
+  T call<T>(
+    ItemFactory<T> itemFactory, {
+    Object? globalKey,
+    Object? tag,
+    Object? args,
+  }) =>
+      _store.get<T>(itemFactory, globalKey: globalKey, tag: tag, args: args);
 
-  T get<T>(ItemFactory<T> itemFactory, {Object? globalKey, Object? tag}) =>
-      _store.get<T>(itemFactory, globalKey: globalKey, tag: tag);
+  T get<T>(
+    ItemFactory<T> itemFactory, {
+    Object? globalKey,
+    Object? tag,
+    Object? args,
+  }) =>
+      _store.get<T>(itemFactory, globalKey: globalKey, tag: tag, args: args);
 
-  T create<T>(ItemFactory<T> itemFactory, {Object? globalKey, Object? tag}) {
-    return _store.create(itemFactory, globalKey: globalKey, tag: tag);
+  T create<T>(
+    ItemFactory<T> itemFactory, {
+    Object? globalKey,
+    Object? tag,
+    Object? args,
+  }) {
+    return _store.create(
+      itemFactory,
+      globalKey: globalKey,
+      tag: tag,
+      args: args,
+    );
   }
 
   T read<T>(Object globalKey) => _store.read(globalKey);

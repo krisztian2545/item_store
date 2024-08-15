@@ -20,14 +20,34 @@ class WidgetRef with DisposableMixin {
   /// boilerplate.
   final CallableItemStore local;
 
-  T call<T>(ItemFactory<T> itemFactory, {Object? globalKey, Object? tag}) =>
-      _store.get<T>(itemFactory, globalKey: globalKey, tag: tag);
+  T call<T>(
+    ItemFactory<T> itemFactory, {
+    Object? globalKey,
+    Object? tag,
+    Object? args,
+  }) =>
+      _store.get<T>(itemFactory, globalKey: globalKey, tag: tag, args: args);
 
-  T get<T>(ItemFactory<T> itemFactory, {Object? globalKey, Object? tag}) =>
-      _store.get<T>(itemFactory, globalKey: globalKey, tag: tag);
+  T get<T>(
+    ItemFactory<T> itemFactory, {
+    Object? globalKey,
+    Object? tag,
+    Object? args,
+  }) =>
+      _store.get<T>(itemFactory, globalKey: globalKey, tag: tag, args: args);
 
-  T create<T>(ItemFactory<T> itemFactory, {Object? globalKey, Object? tag}) {
-    return _store.create(itemFactory, globalKey: globalKey, tag: tag);
+  T create<T>(
+    ItemFactory<T> itemFactory, {
+    Object? globalKey,
+    Object? tag,
+    Object? args,
+  }) {
+    return _store.create(
+      itemFactory,
+      globalKey: globalKey,
+      tag: tag,
+      args: args,
+    );
   }
 
   T read<T>(Object globalKey) => _store.read(globalKey);
