@@ -20,7 +20,7 @@ dependencies:
     git:
       url: https://github.com/krisztian2545/item_store
       path: packages/signal_store
-  signals_flutter: ^5.3.0
+  signals_flutter: ^5.4.0
 
 dev_dependencies:
   flutter_test:
