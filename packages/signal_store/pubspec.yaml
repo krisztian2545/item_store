@@ -11,6 +11,7 @@ dependencies:
   item_store:
     git:
       url: https://github.com/krisztian2545/item_store
+      ref: new-syntax
   signals_core: ^5.2.0
 
 dev_dependencies:

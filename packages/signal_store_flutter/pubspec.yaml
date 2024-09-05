@@ -16,10 +16,12 @@ dependencies:
     git:
       url: https://github.com/krisztian2545/item_store
       path: packages/item_store_flutter
+      ref: new-syntax
   signal_store:
     git:
       url: https://github.com/krisztian2545/item_store
       path: packages/signal_store
+      ref: new-syntax
   signals_flutter: ^5.3.0
 
 dev_dependencies:

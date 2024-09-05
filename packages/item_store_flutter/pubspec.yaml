@@ -15,6 +15,7 @@ dependencies:
   item_store:
     git:
       url: https://github.com/krisztian2545/item_store
+      ref: new-syntax
   async: ^2.11.0
 
 dev_dependencies:
