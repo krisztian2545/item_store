@@ -31,9 +31,10 @@ void main() {
       expect(store.read(key), 42);
     });
 
-    test('get', () {
+    test('get with globalKey multiple times', () {
       final (store, key) = initStoreAndKey();
       expect(store.get<int>((_) => 42, globalKey: key), 42);
+      expect(store.get<int>((_) => 0, globalKey: key), 42);
     });
   });
 
@@ -130,6 +131,68 @@ void main() {
       expect(retrievedAnimal, animal);
       expect(retrievedTaggedPerson, taggedPerson);
       expect(retrievedTaggedAnimal, taggedAnimal);
+    });
+  });
+
+  group('ItemStore "w" syntax', () {
+    test('createw', () {
+      final (store, key) = initStoreAndKey();
+      int sum(Ref ref, List<int> args) =>
+          args.reduce((value, element) => value + element);
+
+      final item = store.createw(sum.w([2, 20, 6, 14]), globalKey: key);
+
+      expect(item, 42);
+    });
+
+    test('read', () {
+      final (store, key) = initStoreAndKey();
+      int sum(Ref ref, List<int> args) =>
+          args.reduce((value, element) => value + element);
+
+      store.createw(sum.w([2, 20, 6, 14]), globalKey: key);
+
+      expect(store.read(key), 42);
+    });
+
+    test('getw by globalKey', () {
+      final (store, key) = initStoreAndKey();
+      int numberOfBuilds = 0;
+      int sum(Ref ref, List<int> args) {
+        numberOfBuilds++;
+        return args.reduce((value, element) => value + element);
+      }
+
+      expect(store.getw(sum.w([2, 20, 6, 14]), globalKey: key), 42);
+      expect(store.getw(sum.w([2, 20, 6, 14]), globalKey: key), 42);
+      expect(numberOfBuilds, 1);
+    });
+
+    test('getw with same tag multiple times', () {
+      final (store, key) = initStoreAndKey();
+      int numberOfBuilds = 0;
+      int add(Ref ref, (int, int) args) {
+        numberOfBuilds++;
+        return args.$1 + args.$2;
+      }
+
+      final params = (20, 22);
+      expect(store.getw(add.w(params), tag: params), 42);
+      expect(store.getw(add.w(params), tag: params), 42);
+      print(store.cache);
+      expect(numberOfBuilds, 1);
+    });
+
+    test('getw with different tags', () {
+      final (store, key) = initStoreAndKey();
+      int add(Ref ref, (int, int) args) {
+        return args.$1 + args.$2;
+      }
+
+      final params1 = (20, 22);
+      final params2 = (1, 3);
+      expect(store.getw(add.w(params1), tag: params1), 42);
+      expect(store.getw(add.w(params2), tag: params2), 4);
     });
   });
 }

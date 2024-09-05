@@ -1,7 +1,7 @@
+import 'package:item_store/src/item_factory.dart';
+
 import 'item.dart';
 import 'ref.dart';
-
-typedef ItemFactory<T> = T Function(Ref);
 
 typedef ItemCacheMap = Map<Object, Item>;
 
@@ -30,7 +30,7 @@ abstract interface class ItemStore {
   /// {@endtemplate}
   static Object globalKeyFrom<T>({
     Object? globalKey,
-    ItemFactory<T>? itemFactory,
+    Function? itemFactory,
     Object? tag,
   }) {
     assert(
@@ -71,6 +71,12 @@ abstract interface class ItemStore {
     Object? args,
   });
 
+  T createw<T>(
+    ItemFactory<T> itemFactory, {
+    Object? tag,
+    Object? globalKey,
+  });
+
   /// Reads the cached value stored with [globalKey].
   /// You can calculate your global key with [globalKeyFrom].
   T? read<T>(Object globalKey);
@@ -81,6 +87,12 @@ abstract interface class ItemStore {
     Object? globalKey,
     Object? tag,
     Object? args,
+  });
+
+  T getw<T>(
+    ItemFactory<T> itemFactory, {
+    Object? tag,
+    Object? globalKey,
   });
 
   /// Stores the given [value] with a global key of it's type ([T]), or as a
@@ -206,6 +218,50 @@ class SimpleItemStore implements ItemStore {
     return result;
   }
 
+  @override
+  T createw<T>(ItemFactory<T> itemFactory, {Object? tag, Object? globalKey}) {
+    final factoryOverride = _overrides[itemFactory];
+    final isOverridden = factoryOverride != null;
+
+    final ref = LazyRef(
+      store: this,
+      globalKey: globalKey,
+      tag: tag,
+      checkKeyInStore: false,
+      isOverridden: isOverridden,
+    );
+
+    late final T result;
+
+    if (isOverridden) {
+      // set args in ref
+      try {
+        // should throw OverriddenException
+        itemFactory(ref);
+      } on OverriddenException {
+        // TODO use correct function type and pass args?
+        // TODO why did this pass tests when I didn't store it in result?
+        result = factoryOverride(ref);
+      }
+    } else {
+      result = itemFactory(ref);
+    }
+
+    final key = ref.globalKey;
+
+    // schedule the disposal of the item's local store
+    ref.onDispose(() => ref.local.dispose());
+
+    // dispose old item stored with same key
+    if (_cache.containsKey(key)) {
+      disposeItem(key);
+    }
+
+    _cache[key] = Item<T>(result, ref.itemMetaData);
+
+    return result;
+  }
+
   /// Reads the cached value stored with [globalKey].
   /// You can calculate your global key with [globalKeyFrom].
   @override
@@ -226,7 +282,63 @@ class SimpleItemStore implements ItemStore {
       itemFactory: itemFactory,
       tag: tag,
     );
-    return read<T>(key) ?? create(itemFactory, globalKey: key, args: args);
+    return read<T>(key) ??
+        create(itemFactory, args: args, tag: tag, globalKey: globalKey);
+  }
+
+  @override
+  T getw<T>(ItemFactory<T> itemFactory, {Object? tag, Object? globalKey}) {
+    final factoryOverride = _overrides[itemFactory];
+    final isOverridden = factoryOverride != null;
+
+    final ref = LazyRef(
+      store: this,
+      globalKey: globalKey,
+      tag: tag,
+      checkKeyInStore: true,
+      isOverridden: isOverridden,
+    );
+
+    late final T result;
+    late final Object key;
+
+    if (isOverridden) {
+      // set args and globalKey in ref
+      try {
+        // should throw OverriddenException
+        itemFactory(ref);
+      } on OverriddenException {
+        key = ref.globalKey;
+
+        // return if there is already a value with this key
+        final alreadyPresentItem = read<T>(key);
+        if (alreadyPresentItem != null) {
+          return alreadyPresentItem;
+        }
+
+        // TODO use correct function type and pass args?
+        result = factoryOverride(ref);
+      }
+    } else {
+      try {
+        result = itemFactory(ref);
+        key = ref.globalKey;
+      } on RedundantKeyException catch (e) {
+        return e.readValue as T;
+      }
+    }
+
+    // schedule the disposal of the item's local store
+    ref.onDispose(() => ref.local.dispose());
+
+    // dispose old item stored with same key
+    if (_cache.containsKey(key)) {
+      disposeItem(key);
+    }
+
+    _cache[key] = Item<T>(result, ref.itemMetaData);
+
+    return result;
   }
 
   @override
