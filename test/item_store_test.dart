@@ -179,7 +179,6 @@ void main() {
       final params = (20, 22);
       expect(store.getw(add.w(params), tag: params), 42);
       expect(store.getw(add.w(params), tag: params), 42);
-      print(store.cache);
       expect(numberOfBuilds, 1);
     });
 

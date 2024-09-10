@@ -24,16 +24,16 @@ class WidgetRef with DisposableMixin {
     ItemFactory<T> itemFactory, {
     Object? globalKey,
     Object? tag,
-  }) =>
-      _store.getw<T>(itemFactory, globalKey: globalKey, tag: tag);
-
-  T get<T>(
-    ItemFactory<T> itemFactory, {
-    Object? globalKey,
-    Object? tag,
     Object? args,
   }) =>
       _store.get<T>(itemFactory, globalKey: globalKey, tag: tag, args: args);
+
+  T getw<T>(
+    ItemFactory<T> itemFactory, {
+    Object? globalKey,
+    Object? tag,
+  }) =>
+      _store.getw<T>(itemFactory, globalKey: globalKey, tag: tag);
 
   T create<T>(
     ItemFactory<T> itemFactory, {

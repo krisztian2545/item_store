@@ -58,12 +58,14 @@ abstract interface class ItemStore {
 
   OverridesMap get overrides;
 
+  /// {@template create}
   /// Creates an object by calling [itemFactory] and writes it into the cache
   /// with a global key, by which you can get it back later with [read].
   /// If there is an object cached with the same global key, then it will be
   /// overwritten.
   ///
   /// {@macro global_key_from}
+  /// {@endtemplate}
   T create<T>(
     ItemFactory<T> itemFactory, {
     Object? globalKey,
@@ -71,6 +73,9 @@ abstract interface class ItemStore {
     Object? args,
   });
 
+  /// Only use with parameterized item factory!
+  ///
+  /// {@macro create}
   T createw<T>(
     ItemFactory<T> itemFactory, {
     Object? tag,
@@ -81,7 +86,9 @@ abstract interface class ItemStore {
   /// You can calculate your global key with [globalKeyFrom].
   T? read<T>(Object globalKey);
 
+  /// {@template get}
   /// [create]s an item or [read]s it if it's already cached.
+  /// {@endtemplate}
   T get<T>(
     ItemFactory<T> itemFactory, {
     Object? globalKey,
@@ -89,6 +96,9 @@ abstract interface class ItemStore {
     Object? args,
   });
 
+  /// Only use with parameterized item factory!
+  ///
+  /// {@macro get}
   T getw<T>(
     ItemFactory<T> itemFactory, {
     Object? tag,
