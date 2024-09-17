@@ -271,9 +271,16 @@ extension RefUtilsX on Ref {
   ///
   /// Returns the provided [object].
   T disposable<T extends Object>(T object, [void Function(T)? dispose]) {
+    bool disposing = false;
+
     // dispose object when the item is being removed from the store
     onDispose(
-      dispose == null ? (object as dynamic).dispose : () => dispose(object),
+      () {
+        if (disposing) return;
+        disposing = true;
+
+        dispose == null ? (object as dynamic).dispose() : dispose(object);
+      },
     );
 
     return object;
@@ -294,18 +301,30 @@ extension RefUtilsX on Ref {
     void Function(T)? disposeObject,
     void Function(void Function())? disposeItem,
   }) {
+    bool disposing = false;
+
     // dispose object when the item is being removed from the store
-    onDispose(
+    onDispose(() {
+      if (disposing) return;
+      disposing = true;
+
       disposeObject == null
-          ? (object as dynamic).dispose
-          : () => disposeObject(object),
-    );
+          ? (object as dynamic).dispose()
+          : disposeObject(object);
+    });
 
     // dispose item from the store, when object gets disposed
+    void safeDisposeSelf() {
+      if (disposing) return;
+      disposing = true;
+
+      disposeSelf();
+    }
+
     if (disposeItem == null) {
-      (object as dynamic).onDispose(disposeSelf);
+      (object as dynamic).onDispose(safeDisposeSelf);
     } else {
-      disposeItem(disposeSelf);
+      disposeItem(safeDisposeSelf);
     }
 
     return object;
