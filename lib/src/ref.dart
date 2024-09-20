@@ -330,3 +330,19 @@ extension RefUtilsX on Ref {
     return object;
   }
 }
+
+extension ObjectUtilsForRefX<T extends Object> on T {
+  T disposeWith(Ref ref, [void Function(T)? dispose]) =>
+      ref.disposable(this, dispose);
+
+  T bindTo(
+    Ref ref, {
+    void Function(T)? disposeObject,
+    void Function(void Function())? disposeItem,
+  }) =>
+      ref.bindTo(
+        this,
+        disposeObject: disposeObject,
+        disposeItem: disposeItem,
+      );
+}
