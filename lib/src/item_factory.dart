@@ -74,7 +74,9 @@ extension ItemFactoryWithTwoOpArgX<R, A, B>
         );
 
         if (arg1 == null) {
-          return this(ref);
+          if (arg2 == null) return this(ref);
+
+          return this(ref, arg1 as A, arg2);
         }
 
         if (arg2 == null) {
