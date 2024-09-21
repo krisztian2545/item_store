@@ -102,3 +102,8 @@ extension WidgetRefUtilsX on WidgetRef {
     return object;
   }
 }
+
+extension ObjectUtilsForWidgetRefX<T extends Object> on T {
+  T disposeWithWidget(WidgetRef ref, [void Function(T)? dispose]) =>
+      ref.disposable(this, dispose);
+}
