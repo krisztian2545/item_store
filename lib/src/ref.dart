@@ -83,10 +83,10 @@ class Ref {
     );
   }
 
-  T read<T>(Object globalKey) => _store.read(globalKey);
+  T read<T>(Object globalKey) => _store.readByKey(globalKey);
 
   T? readValue<T>([Object? tag]) =>
-      _store.read<T>(ItemStore.valueKeyFrom(T, tag: tag));
+      _store.readByKey<T>(ItemStore.valueKeyFrom(T, tag: tag));
 
   T createValue<T>(T value, {Object? tag}) => _store.create<T>(
         (_) => value,
@@ -184,7 +184,7 @@ class LazyRef implements Ref {
     if (isOverridden) throw OverriddenException();
 
     if (_checkKeyInStore) {
-      final value = _store.read(globalKey);
+      final value = _store.readByKey(globalKey);
       if (value != null) throw RedundantKeyException(value);
     }
   }
@@ -235,11 +235,11 @@ class LazyRef implements Ref {
   }
 
   @override
-  T read<T>(Object globalKey) => _store.read(globalKey);
+  T read<T>(Object globalKey) => _store.readByKey(globalKey);
 
   @override
   T? readValue<T>([Object? tag]) =>
-      _store.read<T>(ItemStore.valueKeyFrom(T, tag: tag));
+      _store.readByKey<T>(ItemStore.valueKeyFrom(T, tag: tag));
 
   @override
   T createValue<T>(T value, {Object? tag}) => _store.create<T>(

@@ -60,7 +60,7 @@ abstract interface class ItemStore {
 
   /// {@template create}
   /// Creates an object by calling [itemFactory] and writes it into the cache
-  /// with a global key, by which you can get it back later with [read].
+  /// with a global key, by which you can get it back later with [readByKey].
   /// If there is an object cached with the same global key, then it will be
   /// overwritten.
   ///
@@ -82,12 +82,15 @@ abstract interface class ItemStore {
     Object? globalKey,
   });
 
+  /// Reads the cached value stored with a key calculated with [globalKeyFrom].
+  T? read<T>(ItemFactory<T> itemFactory, {Object? tag});
+
   /// Reads the cached value stored with [globalKey].
   /// You can calculate your global key with [globalKeyFrom].
-  T? read<T>(Object globalKey);
+  T? readByKey<T>(Object globalKey);
 
   /// {@template get}
-  /// [create]s an item or [read]s it if it's already cached.
+  /// [create]s an item or [readByKey]s it if it's already cached.
   /// {@endtemplate}
   T get<T>(
     ItemFactory<T> itemFactory, {
@@ -194,7 +197,7 @@ class SimpleItemStore implements ItemStore {
   OverridesMap get overrides => _overrides;
 
   /// Creates an object by calling [itemFactory] and writes it into the cache
-  /// with a global key, by which you can get it back later with [read].
+  /// with a global key, by which you can get it back later with [readByKey].
   /// If there is an object cached with the same global key, then it will be
   /// overwritten.
   ///
@@ -272,14 +275,23 @@ class SimpleItemStore implements ItemStore {
     return result;
   }
 
+  @override
+  T? read<T>(ItemFactory<T> itemFactory, {Object? tag}) {
+    return (_cache[ItemStore.globalKeyFrom(
+      itemFactory: itemFactory,
+      tag: tag,
+    )] as Item<T>?)
+        ?.data;
+  }
+
   /// Reads the cached value stored with [globalKey].
   /// You can calculate your global key with [globalKeyFrom].
   @override
-  T? read<T>(Object globalKey) {
+  T? readByKey<T>(Object globalKey) {
     return (_cache[globalKey] as Item<T>?)?.data;
   }
 
-  /// [create]s an item or [read]s it if it's already cached.
+  /// [create]s an item or [readByKey]s it if it's already cached.
   @override
   T get<T>(
     ItemFactory<T> itemFactory, {
@@ -292,7 +304,7 @@ class SimpleItemStore implements ItemStore {
       itemFactory: itemFactory,
       tag: tag,
     );
-    return read<T>(key) ??
+    return readByKey<T>(key) ??
         create(itemFactory, args: args, tag: tag, globalKey: globalKey);
   }
 
@@ -321,7 +333,7 @@ class SimpleItemStore implements ItemStore {
         key = ref.globalKey;
 
         // return if there is already a value with this key
-        final alreadyPresentItem = read<T>(key);
+        final alreadyPresentItem = readByKey<T>(key);
         if (alreadyPresentItem != null) {
           return alreadyPresentItem;
         }
@@ -353,7 +365,7 @@ class SimpleItemStore implements ItemStore {
 
   @override
   T? readValue<T>([Object? tag]) =>
-      read<T>(ItemStore.valueKeyFrom(T, tag: tag));
+      readByKey<T>(ItemStore.valueKeyFrom(T, tag: tag));
 
   @override
   T createValue<T>(T value, {Object? tag}) =>
@@ -411,160 +423,6 @@ class SimpleItemStore implements ItemStore {
     _cache.clear();
   }
 }
-
-/// An [ItemStore] implementation that can shadow the values the given store.
-// class ShadowStore implements ItemStore {
-//   ShadowStore({
-//     this.parent,
-//     OverridesList? overrides,
-//   }) : _cache = {} {
-//     _initOverrides(overrides);
-//   }
-
-//   ShadowStore.from(
-//     ItemCacheMap map, {
-//     this.parent,
-//     OverridesList? overrides,
-//   }) : _cache = map {
-//     _initOverrides(overrides);
-//   }
-
-//   void _initOverrides(OverridesList? overrides) {
-//     if (overrides?.isNotEmpty ?? false) {
-//       _overrides.addEntries(overrides!.map((e) {
-//         assert(
-//           e.$1.runtimeType == e.$2.runtimeType,
-//           ItemStore._assertFactoryOverrideReturnTypeMessage,
-//         );
-//         return MapEntry(e.$1, e.$2);
-//       }));
-//     }
-//   }
-
-//   final ItemStore? parent;
-
-//   ItemStore get root => switch (parent) {
-//         null => this,
-//         ShadowStore() => (parent as ShadowStore).root,
-//         _ => parent!,
-//       };
-
-//   final ItemCacheMap _cache;
-
-//   /// Please don't use this unless you really have to.
-//   @override
-//   ItemCacheMap get cache => _cache;
-
-//   final OverridesMap _overrides = {};
-
-//   @override
-//   OverridesMap get overrides => _overrides;
-
-//   /// Creates an object by calling [itemFactory] and writes it into the cache
-//   /// with a global key, by which you can get it back later with [read].
-//   /// If there is an object cached with the same global key, then it will be
-//   /// overwritten.
-//   ///
-//   /// {@macro global_key_from}
-//   @override
-//   T create<T>(ItemFactory<T> itemFactory, {Object? globalKey, Object? tag}) {
-//     final key = ItemStore.globalKeyFrom(
-//       globalKey: globalKey,
-//       itemFactory: itemFactory,
-//       tag: tag,
-//     );
-
-//     final ref = Ref(store: this, globalKey: key, tag: tag);
-//     final T result = _overrides[itemFactory]?.call(ref) ??
-//         parent?.overrides[itemFactory]?.call(ref) ??
-//         itemFactory(ref);
-
-//     // schedule the disposal of the item's local store
-//     ref.onDispose(() => ref.local.dispose());
-
-//     // dispose old item stored with same key
-//     if (_cache.containsKey(key)) {
-//       disposeItem(key);
-//     }
-
-//     _cache[key] = Item<T>(result, ref.itemMetaData);
-
-//     return result;
-//   }
-
-//   /// Reads the cached value stored with [globalKey].
-//   /// You can calculate your global key with [globalKeyFrom].
-//   @override
-//   T? read<T>(Object globalKey) {
-//     return (_cache[globalKey] as Item<T>?)?.data ?? parent?.read(globalKey);
-//   }
-
-//   /// [create]s an item or [read]s it if it's already cached.
-//   @override
-//   T get<T>(ItemFactory<T> itemFactory, {Object? globalKey, Object? tag}) {
-//     final key = ItemStore.globalKeyFrom(
-//       globalKey: globalKey,
-//       itemFactory: itemFactory,
-//       tag: tag,
-//     );
-//     return read<T>(key) ?? create(itemFactory, globalKey: key);
-//   }
-
-//   /// Disposes the item and then removes it from the cache.
-//   @override
-//   void disposeItem(Object globalKey) {
-//     final item = _cache[globalKey];
-//     if (item == null) {
-//       parent?.disposeItem(globalKey);
-//       return;
-//     }
-
-//     item.dispose();
-
-//     _cache.remove(globalKey);
-//   }
-
-//   /// Overrides the [from] factory with the [to] factory. So when creating
-//   /// an item (whether trough [create] or [get]), the [to] factory will be
-//   /// used instead of the original one, even if both an itemFactory and a
-//   /// global key is given.
-//   ///
-//   /// The overriding factory must have the same return type as the original one.
-//   ///
-//   /// If an item is already created with the original factory, it won't be affected
-//   /// by this override.
-//   ///
-//   /// This overrides an item factory (not a value of a key). If you just want
-//   /// to override the value of a key, consider using [create] instead.
-//   @override
-//   void overrideFactory<T>(ItemFactory<T> from, ItemFactory<T> to) {
-//     assert(
-//       from.runtimeType == to.runtimeType,
-//       ItemStore._assertFactoryOverrideReturnTypeMessage,
-//     );
-//     _overrides[from] = to;
-//   }
-
-//   @override
-//   void removeOverrideFrom(ItemFactory factory) {
-//     _overrides.remove(factory);
-//   }
-
-//   /// Calls [disposeItem] for each key in [globalKeys].
-//   @override
-//   void disposeItems(Iterable<Object> globalKeys) =>
-//       globalKeys.forEach(disposeItem);
-
-//   @override
-//   bool get isEmpty => _cache.isEmpty;
-
-//   /// Disposes items and clears cache.
-//   @override
-//   void dispose() {
-//     disposeItems(_cache.keys);
-//     _cache.clear();
-//   }
-// }
 
 extension type CallableItemStore(ItemStore _store) implements ItemStore {
   T call<T>(ItemFactory<T> itemFactory, {Object? globalKey, Object? tag}) =>

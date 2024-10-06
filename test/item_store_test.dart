@@ -28,7 +28,7 @@ void main() {
     test('read', () {
       final (store, key) = initStoreAndKey();
       store.create((_) => 42, globalKey: key);
-      expect(store.read(key), 42);
+      expect(store.readByKey(key), 42);
     });
 
     test('get with globalKey multiple times', () {
@@ -74,8 +74,8 @@ void main() {
       store.create((_) => 42, globalKey: key);
       store.create((_) => 'other', globalKey: otherKey);
 
-      expect(store.read(key), 42);
-      expect(store.read(otherKey), 'other');
+      expect(store.readByKey(key), 42);
+      expect(store.readByKey(otherKey), 'other');
     });
 
     test('get', () {
@@ -152,7 +152,7 @@ void main() {
 
       store.createw(sum.w([2, 20, 6, 14]), globalKey: key);
 
-      expect(store.read(key), 42);
+      expect(store.readByKey(key), 42);
     });
 
     test('getw by globalKey', () {
