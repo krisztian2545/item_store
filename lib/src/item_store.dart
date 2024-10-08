@@ -419,7 +419,7 @@ class SimpleItemStore implements ItemStore {
   /// Disposes items and clears cache.
   @override
   void dispose() {
-    disposeItems(_cache.keys);
+    disposeItems([..._cache.keys]);
     _cache.clear();
   }
 }

@@ -27,6 +27,15 @@ void main() {
 
     test('read', () {
       final (store, key) = initStoreAndKey();
+      final itemFactory = (_) => 42;
+
+      store.create(itemFactory);
+
+      expect(store.read(itemFactory), 42);
+    });
+
+    test('readByKey', () {
+      final (store, key) = initStoreAndKey();
       store.create((_) => 42, globalKey: key);
       expect(store.readByKey(key), 42);
     });

@@ -71,10 +71,21 @@ class WidgetRef with DisposableMixin {
         globalKey: ItemStore.valueKeyFrom(T, tag: tag),
       );
 
-  @protected
-  @override
+  final _disposeCallbacks = <void Function()>[];
+
+  void onDispose(void Function() callback) {
+    if (_disposeCallbacks.contains(callback)) return;
+    _disposeCallbacks.add(callback);
+  }
+
+  void removeDisposeCallback(void Function() callback) {
+    _disposeCallbacks.remove(callback);
+  }
+
   void dispose() {
-    super.dispose();
+    for (final callback in _disposeCallbacks) {
+      callback();
+    }
   }
 }
 
