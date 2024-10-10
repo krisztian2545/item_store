@@ -1,6 +1,6 @@
 name: item_store_flutter
 description: "A new Flutter package project."
-version: 0.2.0
+version: 0.2.1
 homepage:
 publish_to: none
 
@@ -15,7 +15,7 @@ dependencies:
   item_store:
     git:
       url: https://github.com/krisztian2545/item_store
-      ref: new-syntax
+      ref: better-syntax
   async: ^2.11.0
 
 dev_dependencies:

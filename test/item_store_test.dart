@@ -16,46 +16,60 @@ class Animal {
 }
 
 void main() {
-  (ItemStore, String) initStoreAndKey() => (ItemStore(), 'key');
+  (ItemStore, String, int Function(Ref)) initialVariables() =>
+      (ItemStore(), 'key', (_) => 42);
 
   group('ItemStore', () {
     test('create', () {
-      final (store, key) = initStoreAndKey();
-      final item = store.create((_) => 42, globalKey: key);
+      final (store, key, itemFactory) = initialVariables();
+      final item = store.write(itemFactory.p(), globalKey: key);
       expect(item, 42);
     });
 
     test('read', () {
-      final (store, key) = initStoreAndKey();
-      final itemFactory = (_) => 42;
-
-      store.create(itemFactory);
-
+      final (store, key, itemFactory) = initialVariables();
+      store.write(itemFactory.p());
       expect(store.read(itemFactory), 42);
     });
 
     test('readByKey', () {
-      final (store, key) = initStoreAndKey();
-      store.create((_) => 42, globalKey: key);
+      final (store, key, itemFactory) = initialVariables();
+      store.write(itemFactory.p(), globalKey: key);
       expect(store.readByKey(key), 42);
     });
 
     test('get with globalKey multiple times', () {
-      final (store, key) = initStoreAndKey();
-      expect(store.get<int>((_) => 42, globalKey: key), 42);
-      expect(store.get<int>((_) => 0, globalKey: key), 42);
+      final (store, key, itemFactory) = initialVariables();
+      int otherFactory(Ref _) => 0;
+
+      expect(store.get<int>(itemFactory.p(), globalKey: key), 42);
+      expect(store.get<int>(otherFactory.p(), globalKey: key), 42);
     });
   });
 
   group('Ref', () {
     test('onDispose', () {
-      final (store, key) = initStoreAndKey();
+      final (store, key, _) = initialVariables();
       bool disposed = false;
-      final factory = (Ref ref) {
+      itemFactory(Ref ref) {
         ref.onDispose(() => disposed = true);
         return 42;
-      };
-      store.create(factory, globalKey: key);
+      }
+
+      // int counter(Ref ref, [int initial = 0]) {
+      //   return (
+      //     ref.reader(counter)(),
+      //     () => ref.writer(counter)(initial + 1),
+      //   );
+      // }
+
+      // final counter = store.getter(counter)();
+      // final counter = store.getter(tag: 'main', counter)();
+
+      // final (getCount, incCount) = store.writer(counter)();
+      // store.writer((_, x) => x, globalKey: 'count')(5);
+
+      store.write(itemFactory.p(), globalKey: key);
       store.disposeItem(key);
 
       expect(disposed, true);
@@ -69,8 +83,8 @@ void main() {
       final (store, key) = initStoreAndTypeKey();
       final Type otherKey = OtherCustomKey;
 
-      final item = store.create((_) => 42, globalKey: key);
-      final otherItem = store.create((_) => 'other', globalKey: otherKey);
+      final item = store.write(((_) => 42).p(), globalKey: key);
+      final otherItem = store.write(((_) => 'other').p(), globalKey: otherKey);
 
       expect(item, 42);
       expect(otherItem, 'other');
@@ -80,8 +94,8 @@ void main() {
       final (store, key) = initStoreAndTypeKey();
       final Type otherKey = OtherCustomKey;
 
-      store.create((_) => 42, globalKey: key);
-      store.create((_) => 'other', globalKey: otherKey);
+      store.write(((_) => 42).p(), globalKey: key);
+      store.write(((_) => 'other').p(), globalKey: otherKey);
 
       expect(store.readByKey(key), 42);
       expect(store.readByKey(otherKey), 'other');
@@ -91,8 +105,8 @@ void main() {
       final (store, key) = initStoreAndTypeKey();
       final Type otherKey = OtherCustomKey;
 
-      expect(store.get((_) => 42, globalKey: key), 42);
-      expect(store.get((_) => 'other', globalKey: otherKey), 'other');
+      expect(store.get(((_) => 42).p(), globalKey: key), 42);
+      expect(store.get(((_) => 'other').p(), globalKey: otherKey), 'other');
     });
   });
 
@@ -106,10 +120,10 @@ void main() {
       final taggedPerson = Person("Joe");
       final taggedAnimal = Animal("Jack");
 
-      final retrievedPerson = store.createValue(person);
-      final retrievedAnimal = store.createValue(animal);
-      final retrievedTaggedPerson = store.createValue(taggedPerson, tag: "tag");
-      final retrievedTaggedAnimal = store.createValue(taggedAnimal, tag: "tag");
+      final retrievedPerson = store.writeValue(person);
+      final retrievedAnimal = store.writeValue(animal);
+      final retrievedTaggedPerson = store.writeValue(taggedPerson, tag: "tag");
+      final retrievedTaggedAnimal = store.writeValue(taggedAnimal, tag: "tag");
 
       expect(retrievedPerson, person);
       expect(retrievedAnimal, animal);
@@ -124,16 +138,16 @@ void main() {
       final taggedPerson = Person("Joe");
       final taggedAnimal = Animal("Jack");
 
-      store.createValue(person);
+      store.writeValue(person);
       final retrievedPerson = store.readValue<Person>();
 
-      store.createValue(animal);
+      store.writeValue(animal);
       final retrievedAnimal = store.readValue<Animal>();
 
-      store.createValue(taggedPerson, tag: "tag");
+      store.writeValue(taggedPerson, tag: "tag");
       final retrievedTaggedPerson = store.readValue<Person>("tag");
 
-      store.createValue(taggedAnimal, tag: "tag");
+      store.writeValue(taggedAnimal, tag: "tag");
       final retrievedTaggedAnimal = store.readValue<Animal>("tag");
 
       expect(retrievedPerson, person);
@@ -143,42 +157,42 @@ void main() {
     });
   });
 
-  group('ItemStore "w" syntax', () {
-    test('createw', () {
-      final (store, key) = initStoreAndKey();
+  group('ItemStore "p" syntax', () {
+    test('write with parameters', () {
+      final (store, key, _) = initialVariables();
       int sum(Ref ref, List<int> args) =>
           args.reduce((value, element) => value + element);
 
-      final item = store.createw(sum.w([2, 20, 6, 14]), globalKey: key);
+      final item = store.write(sum.p([2, 20, 6, 14]), globalKey: key);
 
       expect(item, 42);
     });
 
     test('read', () {
-      final (store, key) = initStoreAndKey();
+      final (store, key, _) = initialVariables();
       int sum(Ref ref, List<int> args) =>
           args.reduce((value, element) => value + element);
 
-      store.createw(sum.w([2, 20, 6, 14]), globalKey: key);
+      store.write(sum.p([2, 20, 6, 14]), globalKey: key);
 
       expect(store.readByKey(key), 42);
     });
 
     test('getw by globalKey', () {
-      final (store, key) = initStoreAndKey();
+      final (store, key, _) = initialVariables();
       int numberOfBuilds = 0;
       int sum(Ref ref, List<int> args) {
         numberOfBuilds++;
         return args.reduce((value, element) => value + element);
       }
 
-      expect(store.getw(sum.w([2, 20, 6, 14]), globalKey: key), 42);
-      expect(store.getw(sum.w([2, 20, 6, 14]), globalKey: key), 42);
+      expect(store.get(sum.p([2, 20, 6, 14]), globalKey: key), 42);
+      expect(store.get(sum.p([2, 20, 6, 14]), globalKey: key), 42);
       expect(numberOfBuilds, 1);
     });
 
     test('getw with same tag multiple times', () {
-      final (store, key) = initStoreAndKey();
+      final (store, key, _) = initialVariables();
       int numberOfBuilds = 0;
       int add(Ref ref, (int, int) args) {
         numberOfBuilds++;
@@ -186,21 +200,21 @@ void main() {
       }
 
       final params = (20, 22);
-      expect(store.getw(add.w(params), tag: params), 42);
-      expect(store.getw(add.w(params), tag: params), 42);
+      expect(store.get(add.p(params), tag: params), 42);
+      expect(store.get(add.p(params), tag: params), 42);
       expect(numberOfBuilds, 1);
     });
 
     test('getw with different tags', () {
-      final (store, key) = initStoreAndKey();
+      final (store, key, _) = initialVariables();
       int add(Ref ref, (int, int) args) {
         return args.$1 + args.$2;
       }
 
       final params1 = (20, 22);
       final params2 = (1, 3);
-      expect(store.getw(add.w(params1), tag: params1), 42);
-      expect(store.getw(add.w(params2), tag: params2), 4);
+      expect(store.get(add.p(params1), tag: params1), 42);
+      expect(store.get(add.p(params2), tag: params2), 4);
     });
   });
 }

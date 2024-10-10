@@ -46,37 +46,15 @@ class Ref {
     ItemFactory<T> itemFactory, {
     Object? globalKey,
     Object? tag,
-    Object? args,
   }) =>
-      _store.get<T>(itemFactory, globalKey: globalKey, tag: tag, args: args);
+      _store.get<T>(itemFactory, globalKey: globalKey, tag: tag);
 
-  T getw<T>(
-    ItemFactory<T> itemFactory, {
-    Object? globalKey,
-    Object? tag,
-  }) =>
-      _store.getw<T>(itemFactory, globalKey: globalKey, tag: tag);
-
-  T create<T>(
-    ItemFactory<T> itemFactory, {
-    Object? globalKey,
-    Object? tag,
-    Object? args,
-  }) {
-    return _store.create(
-      itemFactory,
-      globalKey: globalKey,
-      tag: tag,
-      args: args,
-    );
-  }
-
-  T createw<T>(
+  T write<T>(
     ItemFactory<T> itemFactory, {
     Object? globalKey,
     Object? tag,
   }) {
-    return _store.createw(
+    return _store.write(
       itemFactory,
       globalKey: globalKey,
       tag: tag,
@@ -88,7 +66,7 @@ class Ref {
   T? readValue<T>([Object? tag]) =>
       _store.readByKey<T>(ItemStore.valueKeyFrom(T, tag: tag));
 
-  T createValue<T>(T value, {Object? tag}) => _store.create<T>(
+  T writeValue<T>(T value, {Object? tag}) => _store.write<T>(
         (_) => value,
         globalKey: ItemStore.valueKeyFrom(T, tag: tag),
       );
@@ -146,7 +124,8 @@ class LazyRef implements Ref {
   @override
   Object get globalKey {
     if (!isInitialized) {
-      throw UninitializedException('globalKey was not initialized.');
+      throw UninitializedException(
+          'globalKey was not initialized. You probably just forgot to wrap the factory with ".p()"');
     }
 
     return _globalKey!;
@@ -194,40 +173,16 @@ class LazyRef implements Ref {
     ItemFactory<T> itemFactory, {
     Object? globalKey,
     Object? tag,
-    Object? args,
   }) =>
-      _store.get<T>(itemFactory, globalKey: globalKey, tag: tag, args: args);
+      _store.get<T>(itemFactory, globalKey: globalKey, tag: tag);
 
   @override
-  T getw<T>(
-    ItemFactory<T> itemFactory, {
-    Object? globalKey,
-    Object? tag,
-  }) =>
-      _store.getw<T>(itemFactory, globalKey: globalKey, tag: tag);
-
-  @override
-  T create<T>(
-    ItemFactory<T> itemFactory, {
-    Object? globalKey,
-    Object? tag,
-    Object? args,
-  }) {
-    return _store.create(
-      itemFactory,
-      globalKey: globalKey,
-      tag: tag,
-      args: args,
-    );
-  }
-
-  @override
-  T createw<T>(
+  T write<T>(
     ItemFactory<T> itemFactory, {
     Object? globalKey,
     Object? tag,
   }) {
-    return _store.createw(
+    return _store.write(
       itemFactory,
       globalKey: globalKey,
       tag: tag,
@@ -242,7 +197,7 @@ class LazyRef implements Ref {
       _store.readByKey<T>(ItemStore.valueKeyFrom(T, tag: tag));
 
   @override
-  T createValue<T>(T value, {Object? tag}) => _store.create<T>(
+  T writeValue<T>(T value, {Object? tag}) => _store.write<T>(
         (_) => value,
         globalKey: ItemStore.valueKeyFrom(T, tag: tag),
       );

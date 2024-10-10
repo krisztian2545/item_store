@@ -72,24 +72,13 @@ class WidgetRef with DisposableMixin {
       );
 
   final _disposeCallbacks = <void Function()>[];
+  final _disposableObjects = <Object>[];
 
   void onDispose(void Function() callback) {
     if (_disposeCallbacks.contains(callback)) return;
     _disposeCallbacks.add(callback);
   }
 
-  void removeDisposeCallback(void Function() callback) {
-    _disposeCallbacks.remove(callback);
-  }
-
-  void dispose() {
-    for (final callback in _disposeCallbacks) {
-      callback();
-    }
-  }
-}
-
-extension WidgetRefUtilsX on WidgetRef {
   /// Binds the provided [object] to the [onDispose] callback, allowing it to be
   /// disposed when the item gets disposed.
   ///
@@ -97,7 +86,13 @@ extension WidgetRefUtilsX on WidgetRef {
   /// provide a custom [dispose] function that will be called instead.
   ///
   /// Returns the provided [object].
+  ///
+  /// It's safe to call this in a widget's build function, because it checks
+  /// if [object] has already been registered for disposal.
   T disposable<T extends Object>(T object, [void Function(T)? dispose]) {
+    if (_disposableObjects.contains(object)) return object;
+
+    _disposableObjects.add(object);
     bool disposing = false;
 
     // dispose object when the item is being removed from the store
@@ -111,6 +106,16 @@ extension WidgetRefUtilsX on WidgetRef {
     );
 
     return object;
+  }
+
+  void removeDisposeCallback(void Function() callback) {
+    _disposeCallbacks.remove(callback);
+  }
+
+  void dispose() {
+    for (final callback in _disposeCallbacks) {
+      callback();
+    }
   }
 }
 

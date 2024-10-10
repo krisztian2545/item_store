@@ -62,24 +62,14 @@ abstract interface class ItemStore {
   /// Creates an object by calling [itemFactory] and writes it into the cache
   /// with a global key, by which you can get it back later with [readByKey].
   /// If there is an object cached with the same global key, then it will be
-  /// overwritten.
+  /// disposed and overwritten.
   ///
   /// {@macro global_key_from}
   /// {@endtemplate}
-  T create<T>(
+  T write<T>(
     ItemFactory<T> itemFactory, {
     Object? globalKey,
     Object? tag,
-    Object? args,
-  });
-
-  /// Only use with parameterized item factory!
-  ///
-  /// {@macro create}
-  T createw<T>(
-    ItemFactory<T> itemFactory, {
-    Object? tag,
-    Object? globalKey,
   });
 
   /// Reads the cached value stored with a key calculated with [globalKeyFrom].
@@ -90,22 +80,12 @@ abstract interface class ItemStore {
   T? readByKey<T>(Object globalKey);
 
   /// {@template get}
-  /// [create]s an item or [readByKey]s it if it's already cached.
+  /// [write]s an item or [readByKey]s it if it's already cached.
   /// {@endtemplate}
   T get<T>(
     ItemFactory<T> itemFactory, {
     Object? globalKey,
     Object? tag,
-    Object? args,
-  });
-
-  /// Only use with parameterized item factory!
-  ///
-  /// {@macro get}
-  T getw<T>(
-    ItemFactory<T> itemFactory, {
-    Object? tag,
-    Object? globalKey,
   });
 
   /// Stores the given [value] with a global key of it's type ([T]), or as a
@@ -114,22 +94,27 @@ abstract interface class ItemStore {
   /// Example:
   /// ```dart
   /// // without a tag
-  /// store.create((_) => "John", globalKey: String);
-  /// store.createValue<String>("John"); // achieves the same as above
+  /// store.write((_) => "John", globalKey: String);
+  /// store.writeValue<String>("John"); // achieves the same as above
   /// // with a tag
-  /// store.create((_) => "John", globalKey: (String, "the second"));
-  /// store.createValue<String>("John", tag: "the second"); // achieves the same as above
+  /// store.write((_) => "John", globalKey: (String, "the second"));
+  /// store.writeValue<String>("John", tag: "the second"); // achieves the same as above
   /// ```
-  T createValue<T>(T value, {Object? tag});
+  T writeValue<T>(
+    T value, {
+    Object? tag,
+    bool disposable,
+    void Function(T)? dispose,
+  });
 
   /// Reads the cached value stored with a key that is either the [T] type,
   /// or a record consisting of the type ([T]) and [tag] if it's not null (like (T, tag)).
   ///
   /// Example:
   /// ```dart
-  /// store.createValue<Person>(Person("John"));
-  /// store.createValue<Person>(Person("Jane"), tag: "manager");
-  /// store.createValue<Person>(Person("Jack"), tag: "tester");
+  /// store.writeValue<Person>(Person("John"));
+  /// store.writeValue<Person>(Person("Jane"), tag: "manager");
+  /// store.writeValue<Person>(Person("Jack"), tag: "tester");
   /// final person = store.readValue<Person>(); // John
   /// final manager = store.readValue<Person>("manager"); // Jane
   /// final tester = store.readValue<Person>("tester"); // Jack
@@ -140,7 +125,7 @@ abstract interface class ItemStore {
   void disposeItem(Object globalKey);
 
   /// Overrides the [from] factory with the [to] factory. So when creating
-  /// an item (whether trough [create] or [get]), the [to] factory will be
+  /// an item (whether trough [write] or [get]), the [to] factory will be
   /// used instead of the original one, even if both an itemFactory and a
   /// global key is given.
   ///
@@ -150,7 +135,7 @@ abstract interface class ItemStore {
   /// by this override.
   ///
   /// This overrides an item factory (not a value of a key). If you just want
-  /// to override the value of a key, consider using [create] instead.
+  /// to override the value of a key, consider using [write] instead.
   void overrideFactory<T>(ItemFactory<T> from, ItemFactory<T> to);
 
   void removeOverrideFrom(ItemFactory factory);
@@ -196,43 +181,8 @@ class SimpleItemStore implements ItemStore {
   @override
   OverridesMap get overrides => _overrides;
 
-  /// Creates an object by calling [itemFactory] and writes it into the cache
-  /// with a global key, by which you can get it back later with [readByKey].
-  /// If there is an object cached with the same global key, then it will be
-  /// overwritten.
-  ///
-  /// {@macro global_key_from}
   @override
-  T create<T>(
-    ItemFactory<T> itemFactory, {
-    Object? globalKey,
-    Object? tag,
-    Object? args,
-  }) {
-    final key = ItemStore.globalKeyFrom(
-      globalKey: globalKey,
-      itemFactory: itemFactory,
-      tag: tag,
-    );
-
-    final ref = Ref(store: this, globalKey: key, tag: tag, args: args);
-    final result = _overrides[itemFactory]?.call(ref) ?? itemFactory(ref);
-
-    // schedule the disposal of the item's local store
-    ref.onDispose(() => ref.local.dispose());
-
-    // dispose old item stored with same key
-    if (_cache.containsKey(key)) {
-      disposeItem(key);
-    }
-
-    _cache[key] = Item<T>(result, ref.itemMetaData);
-
-    return result;
-  }
-
-  @override
-  T createw<T>(ItemFactory<T> itemFactory, {Object? tag, Object? globalKey}) {
+  T write<T>(ItemFactory<T> itemFactory, {Object? tag, Object? globalKey}) {
     final factoryOverride = _overrides[itemFactory];
     final isOverridden = factoryOverride != null;
 
@@ -291,25 +241,8 @@ class SimpleItemStore implements ItemStore {
     return (_cache[globalKey] as Item<T>?)?.data;
   }
 
-  /// [create]s an item or [readByKey]s it if it's already cached.
   @override
-  T get<T>(
-    ItemFactory<T> itemFactory, {
-    Object? globalKey,
-    Object? tag,
-    Object? args,
-  }) {
-    final key = ItemStore.globalKeyFrom(
-      globalKey: globalKey,
-      itemFactory: itemFactory,
-      tag: tag,
-    );
-    return readByKey<T>(key) ??
-        create(itemFactory, args: args, tag: tag, globalKey: globalKey);
-  }
-
-  @override
-  T getw<T>(ItemFactory<T> itemFactory, {Object? tag, Object? globalKey}) {
+  T get<T>(ItemFactory<T> itemFactory, {Object? tag, Object? globalKey}) {
     final factoryOverride = _overrides[itemFactory];
     final isOverridden = factoryOverride != null;
 
@@ -368,8 +301,25 @@ class SimpleItemStore implements ItemStore {
       readByKey<T>(ItemStore.valueKeyFrom(T, tag: tag));
 
   @override
-  T createValue<T>(T value, {Object? tag}) =>
-      create<T>((_) => value, globalKey: ItemStore.valueKeyFrom(T, tag: tag));
+  T writeValue<T>(
+    T value, {
+    Object? tag,
+    bool disposable = false,
+    void Function(T)? dispose,
+  }) =>
+      write<T>(
+        (Ref ref) {
+          if (disposable && value != null) {
+            if (dispose == null) {
+              ref.disposable<Object>(value);
+            } else {
+              ref.disposable<Object>(value, (o) => dispose(o as T));
+            }
+          }
+          return value;
+        }.p(),
+        globalKey: ItemStore.valueKeyFrom(T, tag: tag),
+      );
 
   /// Disposes the item and then removes it from the cache.
   @override
@@ -383,7 +333,7 @@ class SimpleItemStore implements ItemStore {
   }
 
   /// Overrides the [from] factory with the [to] factory. So when creating
-  /// an item (whether trough [create] or [get]), the [to] factory will be
+  /// an item (whether trough [write] or [get]), the [to] factory will be
   /// used instead of the original one, even if both an itemFactory and a
   /// global key is given.
   ///
@@ -393,7 +343,7 @@ class SimpleItemStore implements ItemStore {
   /// by this override.
   ///
   /// This overrides an item factory (not a value of a key). If you just want
-  /// to override the value of a key, consider using [create] instead.
+  /// to override the value of a key, consider using [write] instead.
   @override
   void overrideFactory<T>(ItemFactory<T> from, ItemFactory<T> to) {
     assert(

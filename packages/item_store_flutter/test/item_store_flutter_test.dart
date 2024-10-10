@@ -46,12 +46,13 @@ void main() {
           ),
         ),
       );
+      await tester.pumpAndSettle();
 
       // force calling build multiple times
       await tester.runAsync(() async {
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 5; i++) {
           refresher[0]();
-          await Future.delayed(Duration(milliseconds: 1000));
+          await tester.pumpAndSettle();
         }
       });
 

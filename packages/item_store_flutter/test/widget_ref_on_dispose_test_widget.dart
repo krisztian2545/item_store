@@ -17,17 +17,22 @@ class WidgetRefOnDisposeTest extends StatefulWidget {
 
 class _WidgetRefOnDisposeTestState extends State<WidgetRefOnDisposeTest>
     with WidgetRefMixin {
+  int _buildCount = 0;
+
   @override
   void initState() {
     super.initState();
 
-    widget.refresher.add(() => setState(() {}));
+    widget.refresher.add(() => setState(() => _buildCount++));
   }
+
+  TestDisposableObject testObjectFactory(Ref _) => widget.testObjectFactory();
 
   @override
   Widget build(BuildContext context) {
-    final testObject = ref((_) => widget.testObjectFactory())
-      ..disposeWithWidget(ref);
+    print("build count: $_buildCount");
+
+    final testObject = ref(testObjectFactory)..disposeWithWidget(ref);
 
     return const Placeholder();
   }
