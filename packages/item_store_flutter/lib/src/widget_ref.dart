@@ -24,37 +24,15 @@ class WidgetRef with DisposableMixin {
     ItemFactory<T> itemFactory, {
     Object? globalKey,
     Object? tag,
-    Object? args,
   }) =>
-      _store.get<T>(itemFactory, globalKey: globalKey, tag: tag, args: args);
+      _store.get<T>(itemFactory, globalKey: globalKey, tag: tag);
 
-  T getw<T>(
-    ItemFactory<T> itemFactory, {
-    Object? globalKey,
-    Object? tag,
-  }) =>
-      _store.getw<T>(itemFactory, globalKey: globalKey, tag: tag);
-
-  T create<T>(
-    ItemFactory<T> itemFactory, {
-    Object? globalKey,
-    Object? tag,
-    Object? args,
-  }) {
-    return _store.create(
-      itemFactory,
-      globalKey: globalKey,
-      tag: tag,
-      args: args,
-    );
-  }
-
-  T createw<T>(
+  T write<T>(
     ItemFactory<T> itemFactory, {
     Object? globalKey,
     Object? tag,
   }) {
-    return _store.createw(
+    return _store.write(
       itemFactory,
       globalKey: globalKey,
       tag: tag,
@@ -63,13 +41,15 @@ class WidgetRef with DisposableMixin {
 
   T readByKey<T>(Object globalKey) => _store.readByKey(globalKey);
 
-  T? readValue<T>([Object? tag]) =>
-      _store.readByKey<T>(ItemStore.valueKeyFrom(T, tag: tag));
+  T? readValue<T>([Object? tag]) => _store.readValue<T>(tag);
 
-  T createValue<T>(T value, {Object? tag}) => _store.create<T>(
-        (_) => value,
-        globalKey: ItemStore.valueKeyFrom(T, tag: tag),
-      );
+  T writeValue<T>(
+    T value, {
+    Object? tag,
+    bool disposable = false,
+    void Function(T)? dispose,
+  }) =>
+      _store.writeValue<T>(value, disposable: disposable, dispose: dispose);
 
   final _disposeCallbacks = <void Function()>[];
   final _disposableObjects = <Object>[];

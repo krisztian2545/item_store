@@ -21,8 +21,8 @@ extension CommonFactoriesX on WidgetRef {
     String? initialText,
     void Function(TextEditingController controller)? listener,
   }) {
-    return local.getw(
-      textControllerProvider.w(initialText, listener),
+    return local(
+      textControllerProvider.p(initialText, listener),
       tag: tag,
     );
   }

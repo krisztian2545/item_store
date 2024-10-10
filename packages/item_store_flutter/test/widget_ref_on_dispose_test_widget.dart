@@ -32,7 +32,7 @@ class _WidgetRefOnDisposeTestState extends State<WidgetRefOnDisposeTest>
   Widget build(BuildContext context) {
     print("build count: $_buildCount");
 
-    final testObject = ref(testObjectFactory)..disposeWithWidget(ref);
+    final testObject = ref(testObjectFactory.p())..disposeWithWidget(ref);
 
     return const Placeholder();
   }

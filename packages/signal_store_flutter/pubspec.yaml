@@ -1,6 +1,6 @@
 name: signal_store_flutter
 description: "A new Flutter package project."
-version: 0.0.1
+version: 0.0.2
 homepage:
 
 environment:
@@ -16,12 +16,12 @@ dependencies:
     git:
       url: https://github.com/krisztian2545/item_store
       path: packages/item_store_flutter
-      ref: new-syntax
+      ref: better-syntax
   signal_store:
     git:
       url: https://github.com/krisztian2545/item_store
       path: packages/signal_store
-      ref: new-syntax
+      ref: better-syntax
   signals_flutter: ^5.3.0
 
 dev_dependencies:

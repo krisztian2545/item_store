@@ -5,7 +5,7 @@ import 'package:item_store/item_store.dart';
 typedef ItemFactoryWithArgsNAD<R, A> = R Function(Ref, A, {bool autoDispose});
 
 extension ItemFactoryWithArgsNADX<R, A> on ItemFactoryWithArgsNAD<R, A> {
-  ItemFactory<R> w(A arg, {bool? autoDispose}) => (ref) {
+  ItemFactory<R> p(A arg, {bool? autoDispose}) => (ref) {
         (ref as LazyRef).init(
           itemFactory: this,
           args: Map.unmodifiable({
@@ -33,7 +33,7 @@ typedef ItemFactoryWithTwoArgsNAD<R, A, B> = R Function(
 
 extension ItemFactoryWithTwoArgsNADX<R, A, B>
     on ItemFactoryWithTwoArgsNAD<R, A, B> {
-  ItemFactory<R> w(A arg1, B arg2, {bool? autoDispose}) => (ref) {
+  ItemFactory<R> p(A arg1, B arg2, {bool? autoDispose}) => (ref) {
         (ref as LazyRef).init(
           itemFactory: this,
           args: Map.unmodifiable({
