@@ -39,6 +39,10 @@ class WidgetRef with DisposableMixin {
     );
   }
 
+  T? read<T>(ItemFactory<T> itemFactory, {Object? tag}) {
+    return _store.read(itemFactory, tag: tag);
+  }
+
   T readByKey<T>(Object globalKey) => _store.readByKey(globalKey);
 
   T? readValue<T>([Object? tag]) => _store.readValue<T>(tag);
