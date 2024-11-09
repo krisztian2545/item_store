@@ -24,8 +24,14 @@ class WidgetRef with DisposableMixin {
     ItemFactory<T> itemFactory, {
     Object? globalKey,
     Object? tag,
+    List<Object>? dependencies,
   }) =>
-      _store.get<T>(itemFactory, globalKey: globalKey, tag: tag);
+      _store.get<T>(
+        itemFactory,
+        globalKey: globalKey,
+        tag: tag,
+        dependencies: dependencies,
+      );
 
   T write<T>(
     ItemFactory<T> itemFactory, {
@@ -100,6 +106,12 @@ class WidgetRef with DisposableMixin {
     for (final callback in _disposeCallbacks) {
       callback();
     }
+  }
+}
+
+extension WidgetRefX on WidgetRef {
+  void callOnce(Function() oneOffFun, {Object? tag}) {
+    local(((_) => oneOffFun()).p(), globalKey: (callOnce, tag));
   }
 }
 
