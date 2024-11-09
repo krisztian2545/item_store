@@ -81,11 +81,14 @@ abstract interface class ItemStore {
 
   /// {@template get}
   /// [write]s an item or [readByKey]s it if it's already cached.
+  /// When [dependencies] is provided, it is checked if it was the same
+  /// before, and rewrites the item if it wasn't (like React memo).
   /// {@endtemplate}
   T get<T>(
     ItemFactory<T> itemFactory, {
     Object? globalKey,
     Object? tag,
+    List<Object>? dependencies,
   });
 
   /// Stores the given [value] with a global key of it's type ([T]), or as a
@@ -242,7 +245,12 @@ class SimpleItemStore implements ItemStore {
   }
 
   @override
-  T get<T>(ItemFactory<T> itemFactory, {Object? tag, Object? globalKey}) {
+  T get<T>(
+    ItemFactory<T> itemFactory, {
+    Object? tag,
+    Object? globalKey,
+    List<Object>? dependencies,
+  }) {
     final factoryOverride = _overrides[itemFactory];
     final isOverridden = factoryOverride != null;
 
@@ -250,6 +258,7 @@ class SimpleItemStore implements ItemStore {
       store: this,
       globalKey: globalKey,
       tag: tag,
+      dependencies: dependencies,
       checkKeyInStore: true,
       isOverridden: isOverridden,
     );

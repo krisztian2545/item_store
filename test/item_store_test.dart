@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:item_store/item_store.dart';
 import 'package:test/test.dart';
 
@@ -44,6 +46,84 @@ void main() {
 
       expect(store.get<int>(itemFactory.p(), globalKey: key), 42);
       expect(store.get<int>(otherFactory.p(), globalKey: key), 42);
+    });
+
+    test('get with the same non null dependencies', () {
+      final (store, key, _) = initialVariables();
+      int itemData = 0;
+      int incNumberFactory(Ref _) => itemData++;
+
+      expect(
+        store.get(incNumberFactory.p(), dependencies: [0]),
+        store.get(incNumberFactory.p(), dependencies: [0]),
+      );
+    });
+
+    test('get with the both dependencies as null', () {
+      final (store, key, _) = initialVariables();
+      int itemData = 0;
+      int incNumberFactory(Ref _) => itemData++;
+
+      expect(
+        store.get(incNumberFactory.p()),
+        store.get(incNumberFactory.p()),
+      );
+    });
+
+    test('get with dependencies with same length, but different values', () {
+      final (store, key, _) = initialVariables();
+      int itemData = 0;
+      int incNumberFactory(Ref _) => itemData++;
+
+      final firstItem = store.get(incNumberFactory.p(), dependencies: [0]);
+      final secondItem = store.get(incNumberFactory.p(), dependencies: [1]);
+
+      expect(firstItem, 0);
+      expect(secondItem, 1);
+      expect(firstItem, isNot(secondItem));
+      expect(itemData, 2);
+    });
+
+    test('get with dependencies with different length', () {
+      final (store, key, _) = initialVariables();
+      int itemData = 0;
+      int incNumberFactory(Ref _) => itemData++;
+
+      final firstItem = store.get(incNumberFactory.p(), dependencies: [0]);
+      final secondItem = store.get(incNumberFactory.p(), dependencies: [0, 1]);
+
+      expect(firstItem, 0);
+      expect(secondItem, 1);
+      expect(firstItem, isNot(secondItem));
+      expect(itemData, 2);
+    });
+
+    test('get with first dependencies being null', () {
+      final (store, key, _) = initialVariables();
+      int itemData = 0;
+      int incNumberFactory(Ref _) => itemData++;
+
+      final firstItem = store.get(incNumberFactory.p());
+      final secondItem = store.get(incNumberFactory.p(), dependencies: [0, 1]);
+
+      expect(firstItem, 0);
+      expect(secondItem, 1);
+      expect(firstItem, isNot(secondItem));
+      expect(itemData, 2);
+    });
+
+    test('get with second dependencies being null', () {
+      final (store, key, _) = initialVariables();
+      int itemData = 0;
+      int incNumberFactory(Ref _) => itemData++;
+
+      final firstItem = store.get(incNumberFactory.p(), dependencies: [0]);
+      final secondItem = store.get(incNumberFactory.p());
+
+      expect(firstItem, 0);
+      expect(secondItem, 1);
+      expect(firstItem, isNot(secondItem));
+      expect(itemData, 2);
     });
   });
 

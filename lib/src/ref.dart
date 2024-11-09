@@ -46,8 +46,14 @@ class Ref {
     ItemFactory<T> itemFactory, {
     Object? globalKey,
     Object? tag,
+    List<Object>? dependencies,
   }) =>
-      _store.get<T>(itemFactory, globalKey: globalKey, tag: tag);
+      _store.get<T>(
+        itemFactory,
+        globalKey: globalKey,
+        tag: tag,
+        dependencies: dependencies,
+      );
 
   T write<T>(
     ItemFactory<T> itemFactory, {
@@ -93,12 +99,14 @@ class LazyRef implements Ref {
     this.tag,
     bool checkKeyInStore = false,
     this.isOverridden = false,
+    List<Object>? dependencies,
     CallableItemStore? localStore,
   })  : _store = store,
         _globalKey = globalKey,
         local = localStore ?? CallableItemStore(SimpleItemStore()),
         _checkKeyInStore = checkKeyInStore,
-        _isInitialized = false;
+        _isInitialized = false,
+        itemMetaData = ItemMetaData(dependecies: dependencies);
 
   @override
   final ItemStore _store;
@@ -112,7 +120,7 @@ class LazyRef implements Ref {
   final CallableItemStore local;
 
   @override
-  final ItemMetaData itemMetaData = ItemMetaData();
+  final ItemMetaData itemMetaData;
 
   bool _isInitialized;
   bool get isInitialized => _isInitialized;
@@ -163,8 +171,37 @@ class LazyRef implements Ref {
     if (isOverridden) throw OverriddenException();
 
     if (_checkKeyInStore) {
-      final value = _store.readByKey(globalKey);
-      if (value != null) throw RedundantKeyException(value);
+      final value = _store.cache[globalKey];
+      if (value != null) {
+        bool dependenciesAreSame = true;
+        final previousDependencies = value.metaData.dependecies;
+
+        // check if dependencies changed
+        if (previousDependencies == null && itemMetaData.dependecies == null) {
+          throw RedundantKeyException(value.data);
+        } else if (
+            // none are null
+            previousDependencies != null &&
+                itemMetaData.dependecies != null &&
+                // and they have the same length
+                previousDependencies.length ==
+                    itemMetaData.dependecies!.length) {
+          // check the values
+          for (int i = 0; i < itemMetaData.dependecies!.length; i++) {
+            if (itemMetaData.dependecies![i] != previousDependencies[i]) {
+              dependenciesAreSame = false;
+              break;
+            }
+          }
+
+          if (dependenciesAreSame) {
+            throw RedundantKeyException(value.data);
+          }
+
+          // let the item be rewritten
+        }
+        // let the item be rewritten
+      }
     }
   }
 
@@ -173,8 +210,14 @@ class LazyRef implements Ref {
     ItemFactory<T> itemFactory, {
     Object? globalKey,
     Object? tag,
+    List<Object>? dependencies,
   }) =>
-      _store.get<T>(itemFactory, globalKey: globalKey, tag: tag);
+      _store.get<T>(
+        itemFactory,
+        globalKey: globalKey,
+        tag: tag,
+        dependencies: dependencies,
+      );
 
   @override
   T write<T>(
@@ -283,6 +326,13 @@ extension RefUtilsX on Ref {
     }
 
     return object;
+  }
+
+  /// Calls the provided function only once.
+  /// If you want to use more than one function to be called once,
+  /// use the [tag] to differentiate them.
+  void callOnce(Function() oneOffFun, {Object? tag}) {
+    local(((_) => oneOffFun()).p(), globalKey: (callOnce, tag));
   }
 }
 

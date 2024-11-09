@@ -14,8 +14,12 @@ class Item<T> {
 }
 
 class ItemMetaData {
-  ItemMetaData({List<ItemDisposeCallback>? disposeCallbacks})
-      : disposeCallbacks = disposeCallbacks ?? [];
+  ItemMetaData({
+    List<ItemDisposeCallback>? disposeCallbacks,
+    this.dependecies,
+  }) : disposeCallbacks = disposeCallbacks ?? [];
 
   final List<ItemDisposeCallback> disposeCallbacks;
+
+  final List<Object>? dependecies;
 }
