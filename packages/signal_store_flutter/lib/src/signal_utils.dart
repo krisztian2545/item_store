@@ -10,7 +10,7 @@ extension WidgetRefSignalUtilsExtensionX on WidgetRef {
   }
 }
 
-extension SignalUtilsX<T> on ReadonlySignal<T> {
+extension FlutterSignalUtilsX<T> on ReadonlySignal<T> {
   ReadonlySignal<T> subWithWidget(WidgetRef ref) {
     return ref.subToSignal(this);
   }
