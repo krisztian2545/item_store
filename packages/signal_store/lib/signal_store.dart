@@ -10,5 +10,4 @@ export 'src/stream_factories.dart';
 export 'src/signal_utils.dart';
 
 // re-export packages
-export 'package:signals_core/signals_core.dart';
 export 'package:item_store/item_store.dart';
