@@ -79,6 +79,43 @@ abstract interface class ItemStore {
   /// You can calculate your global key with [globalKeyFrom].
   T? readByKey<T>(Object globalKey);
 
+  static bool dependciesAreSameFor(
+    Item? item, {
+    required List<Object>? newDependencies,
+  }) {
+    if (item != null) {
+      bool dependenciesAreSame = true;
+      final previousDependencies = item.metaData.dependecies;
+
+      // check if dependencies changed
+      if (previousDependencies == null && newDependencies == null) {
+        throw RedundantKeyException(item.data);
+      } else if (
+          // none are null
+          previousDependencies != null &&
+              newDependencies != null &&
+              // and they have the same length
+              previousDependencies.length == newDependencies.length) {
+        // check the values
+        for (int i = 0; i < newDependencies.length; i++) {
+          if (newDependencies[i] != previousDependencies[i]) {
+            dependenciesAreSame = false;
+            break;
+          }
+        }
+
+        if (dependenciesAreSame) {
+          return true;
+        }
+
+        // let the item be rewritten
+      }
+      // let the item be rewritten
+    }
+
+    return false;
+  }
+
   /// {@template get}
   /// [write]s an item or [readByKey]s it if it's already cached.
   /// When [dependencies] is provided, it is checked if it was the same

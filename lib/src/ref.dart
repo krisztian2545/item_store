@@ -172,35 +172,12 @@ class LazyRef implements Ref {
 
     if (_checkKeyInStore) {
       final value = _store.cache[globalKey];
-      if (value != null) {
-        bool dependenciesAreSame = true;
-        final previousDependencies = value.metaData.dependecies;
 
-        // check if dependencies changed
-        if (previousDependencies == null && itemMetaData.dependecies == null) {
-          throw RedundantKeyException(value.data);
-        } else if (
-            // none are null
-            previousDependencies != null &&
-                itemMetaData.dependecies != null &&
-                // and they have the same length
-                previousDependencies.length ==
-                    itemMetaData.dependecies!.length) {
-          // check the values
-          for (int i = 0; i < itemMetaData.dependecies!.length; i++) {
-            if (itemMetaData.dependecies![i] != previousDependencies[i]) {
-              dependenciesAreSame = false;
-              break;
-            }
-          }
-
-          if (dependenciesAreSame) {
-            throw RedundantKeyException(value.data);
-          }
-
-          // let the item be rewritten
-        }
-        // let the item be rewritten
+      if (ItemStore.dependciesAreSameFor(
+        value,
+        newDependencies: itemMetaData.dependecies,
+      )) {
+        throw RedundantKeyException(value!.data);
       }
     }
   }
