@@ -60,7 +60,7 @@ class Ref {
     Object? globalKey,
     Object? tag,
   }) {
-    return _store.write(
+    return _store.write<T>(
       itemFactory,
       globalKey: globalKey,
       tag: tag,
@@ -84,6 +84,7 @@ class Ref {
 
   /// Adds [callback] to the list of dispose callbacks.
   void onDispose(ItemDisposeCallback callback) {
+    if (itemMetaData.disposeCallbacks.contains(callback)) return;
     itemMetaData.disposeCallbacks.add(callback);
   }
 
@@ -205,7 +206,7 @@ class LazyRef implements Ref {
     Object? globalKey,
     Object? tag,
   }) {
-    return _store.write(
+    return _store.write<T>(
       itemFactory,
       globalKey: globalKey,
       tag: tag,
@@ -232,9 +233,10 @@ class LazyRef implements Ref {
   @override
   void disposeSelf() => _store.disposeItem(globalKey);
 
-  /// Adds [callback] to the list of dispose callbacks.
+  /// Adds [callback] to the list of dispose callbacks, if not already added.
   @override
   void onDispose(ItemDisposeCallback callback) {
+    if (itemMetaData.disposeCallbacks.contains(callback)) return;
     itemMetaData.disposeCallbacks.add(callback);
   }
 
@@ -253,6 +255,10 @@ extension RefUtilsX on Ref {
   ///
   /// Returns the provided [object].
   T disposable<T extends Object>(T object, [void Function(T)? dispose]) {
+    if (itemMetaData.disposableObjects.contains(object)) {
+      return object;
+    }
+
     bool disposing = false;
 
     // dispose object when the item is being removed from the store
@@ -283,6 +289,8 @@ extension RefUtilsX on Ref {
     void Function(T)? disposeObject,
     void Function(void Function())? disposeItem,
   }) {
+    if (itemMetaData.disposableObjects.contains(object)) return object;
+
     bool disposing = false;
 
     // dispose object when the item is being removed from the store

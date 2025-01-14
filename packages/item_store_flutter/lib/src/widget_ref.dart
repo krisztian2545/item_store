@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:item_store/item_store.dart';
 
-class WidgetRef with DisposableMixin {
+class WidgetRef {
   WidgetRef({
     required ItemStore store,
     CallableItemStore? localStore,
@@ -38,7 +38,7 @@ class WidgetRef with DisposableMixin {
     Object? globalKey,
     Object? tag,
   }) {
-    return _store.write(
+    return _store.write<T>(
       itemFactory,
       globalKey: globalKey,
       tag: tag,
@@ -46,10 +46,10 @@ class WidgetRef with DisposableMixin {
   }
 
   T? read<T>(ItemFactory<T> itemFactory, {Object? tag}) {
-    return _store.read(itemFactory, tag: tag);
+    return _store.read<T>(itemFactory, tag: tag);
   }
 
-  T readByKey<T>(Object globalKey) => _store.readByKey(globalKey);
+  T? readByKey<T>(Object globalKey) => _store.readByKey<T>(globalKey);
 
   T? readValue<T>([Object? tag]) => _store.readValue<T>(tag);
 

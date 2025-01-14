@@ -15,11 +15,15 @@ class Item<T> {
 
 class ItemMetaData {
   ItemMetaData({
-    List<ItemDisposeCallback>? disposeCallbacks,
+    this.disposeCallbacks = const [],
+    this.disposableObjects = const [],
     this.dependecies,
-  }) : disposeCallbacks = disposeCallbacks ?? [];
+  });
 
   final List<ItemDisposeCallback> disposeCallbacks;
+
+  /// A list of objects that are registered for disposal in [disposeCallbacks].
+  final List<Object> disposableObjects;
 
   final List<Object>? dependecies;
 }
