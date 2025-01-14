@@ -49,3 +49,25 @@ extension ItemFactoryWithTwoArgsNADX<R, A, B>
         return this(ref, arg1, arg2, autoDispose: autoDispose);
       };
 }
+
+// ItemFactory with required arg and initialValue
+
+typedef ItemFactoryWithArgsNIv<R, A, B> = R Function(Ref, A, {B? initialValue});
+
+extension ItemFactoryWithArgsNIvX<R, A, B> on ItemFactoryWithArgsNIv<R, A, B> {
+  ItemFactory<R> p(A arg, {B? initialValue}) => (ref) {
+        (ref as LazyRef).init(
+          itemFactory: this,
+          args: Map.unmodifiable({
+            'positioned': arg,
+            'initialValue': initialValue,
+          }),
+        );
+
+        if (initialValue == null) {
+          return this(ref, arg);
+        }
+
+        return this(ref, arg, initialValue: initialValue);
+      };
+}
