@@ -67,7 +67,10 @@ class Ref {
     );
   }
 
-  T read<T>(Object globalKey) => _store.readByKey(globalKey);
+  T? read<T>(ItemFactory<T> itemFactory, {Object? tag}) =>
+      _store.read<T>(itemFactory, tag: tag);
+
+  T? readByKey<T>(Object globalKey) => _store.readByKey<T>(globalKey);
 
   T? readValue<T>([Object? tag]) =>
       _store.readByKey<T>(ItemStore.valueKeyFrom(T, tag: tag));
@@ -210,7 +213,11 @@ class LazyRef implements Ref {
   }
 
   @override
-  T read<T>(Object globalKey) => _store.readByKey(globalKey);
+  T? read<T>(ItemFactory<T> itemFactory, {Object? tag}) =>
+      _store.read<T>(itemFactory, tag: tag);
+
+  @override
+  T? readByKey<T>(Object globalKey) => _store.readByKey<T>(globalKey);
 
   @override
   T? readValue<T>([Object? tag]) =>
