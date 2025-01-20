@@ -274,12 +274,12 @@ extension RefUtilsX on Ref {
   /// See also:
   /// - [disposable] for one way binding,
   /// - [DisposableMixin] to add the required functions to your class.
-  T bindTo<T>(
+  T bindTo<T extends Object>(
     T object, {
     void Function(T)? dispose,
     void Function(void Function())? onObjectDispose,
   }) {
-    return itemMetaData.safeBindTo(
+    return itemMetaData.safeBindTo<T>(
       object,
       dispose: dispose,
       onObjectDispose: onObjectDispose,
@@ -297,7 +297,7 @@ extension RefUtilsX on Ref {
 
 extension ObjectUtilsForRefX<T extends Object> on T {
   T disposeWith(Ref ref, [void Function(T)? dispose]) {
-    return ref.disposable(this, dispose);
+    return ref.disposable<T>(this, dispose);
   }
 
   T bindTo(
@@ -305,7 +305,7 @@ extension ObjectUtilsForRefX<T extends Object> on T {
     void Function(T)? dispose,
     void Function(void Function() disposeItemFromStore)? onObjectDispose,
   }) {
-    return ref.bindTo(
+    return ref.bindTo<T>(
       this,
       dispose: dispose,
       onObjectDispose: onObjectDispose,
