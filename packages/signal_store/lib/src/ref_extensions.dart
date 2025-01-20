@@ -39,4 +39,21 @@ extension SignalsRefUtilsX on Ref {
         debugLabel: debugLabel,
         autoDispose: autoDispose,
       )..bindTo(this);
+
+  FutureSignal<T> boundComputedAsync<T>(
+    Future<T> Function() fn, {
+    T? initialValue,
+    String? debugLabel,
+    bool autoDispose = true,
+    List<ReadonlySignal<dynamic>> dependencies = const [],
+    bool lazy = true,
+  }) =>
+      FutureSignal<T>(
+        fn,
+        initialValue: initialValue,
+        debugLabel: debugLabel,
+        autoDispose: autoDispose,
+        dependencies: dependencies,
+        lazy: lazy,
+      )..bindTo(this);
 }
