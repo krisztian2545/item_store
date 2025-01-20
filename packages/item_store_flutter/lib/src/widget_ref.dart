@@ -70,7 +70,7 @@ class WidgetRef {
   }
 
   /// Binds the provided [object] to the [onDispose] callback, allowing it to be
-  /// disposed when the item gets disposed.
+  /// disposed when the widget gets disposed.
   ///
   /// The [object] either has to have a void dispose() function, or
   /// provide a custom [dispose] function that will be called instead.
@@ -81,11 +81,11 @@ class WidgetRef {
   /// if [object] has already been registered for disposal.
   T disposable<T extends Object>(T object, [void Function(T)? dispose]) {
     if (_disposableObjects.contains(object)) return object;
-
     _disposableObjects.add(object);
+
     bool disposing = false;
 
-    // dispose object when the item is being removed from the store
+    // dispose object when the widget is being disposed
     onDispose(
       () {
         if (disposing) return;

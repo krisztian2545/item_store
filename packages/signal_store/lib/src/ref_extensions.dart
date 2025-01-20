@@ -17,4 +17,26 @@ extension SignalsRefUtilsX on Ref {
 
     return cleanup;
   }
+
+  Signal<T> boundSignal<T>(
+    T value, {
+    String? debugLabel,
+    bool autoDispose = true,
+  }) =>
+      Signal<T>(
+        value,
+        debugLabel: debugLabel,
+        autoDispose: autoDispose,
+      )..bindTo(this);
+
+  Computed<T> boundComputed<T>(
+    T Function() fn, {
+    String? debugLabel,
+    bool autoDispose = true,
+  }) =>
+      Computed<T>(
+        fn,
+        debugLabel: debugLabel,
+        autoDispose: autoDispose,
+      )..bindTo(this);
 }

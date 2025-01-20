@@ -421,6 +421,16 @@ class SimpleItemStore implements ItemStore {
 }
 
 extension type CallableItemStore(ItemStore _store) implements ItemStore {
-  T call<T>(ItemFactory<T> itemFactory, {Object? globalKey, Object? tag}) =>
-      _store.get<T>(itemFactory, globalKey: globalKey, tag: tag);
+  T call<T>(
+    ItemFactory<T> itemFactory, {
+    Object? globalKey,
+    Object? tag,
+    List<Object>? dependencies,
+  }) =>
+      _store.get<T>(
+        itemFactory,
+        globalKey: globalKey,
+        tag: tag,
+        dependencies: dependencies,
+      );
 }

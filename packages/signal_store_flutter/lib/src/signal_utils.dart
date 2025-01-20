@@ -6,7 +6,7 @@ extension WidgetRefSignalUtilsExtensionX on WidgetRef {
       this<Signal<T>>(((_) => lazySignal<T>()).p(), globalKey: globalKey);
 
   ReadonlySignal<T> subToSignal<T>(ReadonlySignal<T> signal) {
-    onDispose(signal.subscribe((_) {}));
+    callOnce(signal.sub, tag: (subToSignal, signal));
     return signal;
   }
 }

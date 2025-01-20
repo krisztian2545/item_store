@@ -75,17 +75,20 @@ class Ref {
   T? readValue<T>([Object? tag]) =>
       _store.readByKey<T>(ItemStore.valueKeyFrom(T, tag: tag));
 
-  T writeValue<T>(T value, {Object? tag}) => _store.write<T>(
-        (_) => value,
-        globalKey: ItemStore.valueKeyFrom(T, tag: tag),
-      );
+  T writeValue<T>(T value, {Object? tag}) {
+    return _store.write<T>(
+      (_) => value,
+      globalKey: ItemStore.valueKeyFrom(T, tag: tag),
+    );
+  }
 
-  void disposeSelf() => _store.disposeItem(globalKey);
+  void disposeSelf() {
+    _store.disposeItem(globalKey);
+  }
 
   /// Adds [callback] to the list of dispose callbacks.
   void onDispose(ItemDisposeCallback callback) {
-    if (itemMetaData.disposeCallbacks.contains(callback)) return;
-    itemMetaData.disposeCallbacks.add(callback);
+    itemMetaData.safeAddDisposeCallback(callback);
   }
 
   void removeDisposeCallback(ItemDisposeCallback callback) {
@@ -225,19 +228,22 @@ class LazyRef implements Ref {
       _store.readByKey<T>(ItemStore.valueKeyFrom(T, tag: tag));
 
   @override
-  T writeValue<T>(T value, {Object? tag}) => _store.write<T>(
-        (_) => value,
-        globalKey: ItemStore.valueKeyFrom(T, tag: tag),
-      );
+  T writeValue<T>(T value, {Object? tag}) {
+    return _store.write<T>(
+      (_) => value,
+      globalKey: ItemStore.valueKeyFrom(T, tag: tag),
+    );
+  }
 
   @override
-  void disposeSelf() => _store.disposeItem(globalKey);
+  void disposeSelf() {
+    _store.disposeItem(globalKey);
+  }
 
   /// Adds [callback] to the list of dispose callbacks, if not already added.
   @override
   void onDispose(ItemDisposeCallback callback) {
-    if (itemMetaData.disposeCallbacks.contains(callback)) return;
-    itemMetaData.disposeCallbacks.add(callback);
+    itemMetaData.safeAddDisposeCallback(callback);
   }
 
   @override
@@ -255,23 +261,7 @@ extension RefUtilsX on Ref {
   ///
   /// Returns the provided [object].
   T disposable<T extends Object>(T object, [void Function(T)? dispose]) {
-    if (itemMetaData.disposableObjects.contains(object)) {
-      return object;
-    }
-
-    bool disposing = false;
-
-    // dispose object when the item is being removed from the store
-    onDispose(
-      () {
-        if (disposing) return;
-        disposing = true;
-
-        dispose == null ? (object as dynamic).dispose() : dispose(object);
-      },
-    );
-
-    return object;
+    return itemMetaData.safeAddDisposableObject<T>(object, dispose);
   }
 
   /// Bind the given [object] object to this ref, meaning if any of them gets disposed,
@@ -279,45 +269,22 @@ extension RefUtilsX on Ref {
   ///
   /// [object] must have:
   /// - a void dispose() function or provide [disposeObject],
-  /// - a void onDispose(void Function()) function or provide [disposeItem].
+  /// - a void onDispose(void Function()) function or provide [onObjectDispose].
   ///
   /// See also:
   /// - [disposable] for one way binding,
   /// - [DisposableMixin] to add the required functions to your class.
   T bindTo<T>(
     T object, {
-    void Function(T)? disposeObject,
-    void Function(void Function())? disposeItem,
+    void Function(T)? dispose,
+    void Function(void Function())? onObjectDispose,
   }) {
-    if (itemMetaData.disposableObjects.contains(object)) return object;
-
-    bool disposing = false;
-
-    // dispose object when the item is being removed from the store
-    onDispose(() {
-      if (disposing) return;
-      disposing = true;
-
-      disposeObject == null
-          ? (object as dynamic).dispose()
-          : disposeObject(object);
-    });
-
-    // dispose item from the store, when object gets disposed
-    void safeDisposeSelf() {
-      if (disposing) return;
-      disposing = true;
-
-      disposeSelf();
-    }
-
-    if (disposeItem == null) {
-      (object as dynamic).onDispose(safeDisposeSelf);
-    } else {
-      disposeItem(safeDisposeSelf);
-    }
-
-    return object;
+    return itemMetaData.safeBindTo(
+      object,
+      dispose: dispose,
+      onObjectDispose: onObjectDispose,
+      disposeFromStore: disposeSelf,
+    );
   }
 
   /// Calls the provided function only once.
@@ -329,17 +296,19 @@ extension RefUtilsX on Ref {
 }
 
 extension ObjectUtilsForRefX<T extends Object> on T {
-  T disposeWith(Ref ref, [void Function(T)? dispose]) =>
-      ref.disposable(this, dispose);
+  T disposeWith(Ref ref, [void Function(T)? dispose]) {
+    return ref.disposable(this, dispose);
+  }
 
   T bindTo(
     Ref ref, {
-    void Function(T)? disposeObject,
-    void Function(void Function())? disposeItem,
-  }) =>
-      ref.bindTo(
-        this,
-        disposeObject: disposeObject,
-        disposeItem: disposeItem,
-      );
+    void Function(T)? dispose,
+    void Function(void Function() disposeItemFromStore)? onObjectDispose,
+  }) {
+    return ref.bindTo(
+      this,
+      dispose: dispose,
+      onObjectDispose: onObjectDispose,
+    );
+  }
 }
