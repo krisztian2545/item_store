@@ -1,5 +1,17 @@
-import 'item.dart';
-import 'item_store.dart';
+import 'package:item_store/item_store.dart';
+
+class UninitializedException implements Exception {
+  UninitializedException([this.message]);
+  final String? message;
+}
+
+class OverriddenException implements Exception {}
+
+class RedundantKeyException<T> implements Exception {
+  RedundantKeyException(this.readValue);
+  // The value stored with the redundant key.
+  final T readValue;
+}
 
 class Ref {
   Ref({
@@ -34,49 +46,207 @@ class Ref {
     ItemFactory<T> itemFactory, {
     Object? globalKey,
     Object? tag,
-    Object? args,
+    List<Object>? dependencies,
   }) =>
-      _store.get<T>(itemFactory, globalKey: globalKey, tag: tag, args: args);
+      _store.get<T>(
+        itemFactory,
+        globalKey: globalKey,
+        tag: tag,
+        dependencies: dependencies,
+      );
 
-  T get<T>(
+  T write<T>(
     ItemFactory<T> itemFactory, {
     Object? globalKey,
     Object? tag,
-    Object? args,
-  }) =>
-      _store.get<T>(itemFactory, globalKey: globalKey, tag: tag, args: args);
-
-  T create<T>(
-    ItemFactory<T> itemFactory, {
-    Object? globalKey,
-    Object? tag,
-    Object? args,
   }) {
-    return _store.create(
+    return _store.write<T>(
       itemFactory,
       globalKey: globalKey,
       tag: tag,
-      args: args,
     );
   }
 
-  T read<T>(Object globalKey) => _store.read(globalKey);
+  T? read<T>(ItemFactory<T> itemFactory, {Object? tag}) =>
+      _store.read<T>(itemFactory, tag: tag);
+
+  T? readByKey<T>(Object globalKey) => _store.readByKey<T>(globalKey);
 
   T? readValue<T>([Object? tag]) =>
-      _store.read<T>(ItemStore.valueKeyFrom(T, tag: tag));
+      _store.readByKey<T>(ItemStore.valueKeyFrom(T, tag: tag));
 
-  T createValue<T>(T value, {Object? tag}) => _store.create<T>(
-        (_) => value,
-        globalKey: ItemStore.valueKeyFrom(T, tag: tag),
-      );
+  T writeValue<T>(T value, {Object? tag}) {
+    return _store.write<T>(
+      (_) => value,
+      globalKey: ItemStore.valueKeyFrom(T, tag: tag),
+    );
+  }
 
-  void disposeSelf() => _store.disposeItem(globalKey);
+  void disposeSelf() {
+    _store.disposeItem(globalKey);
+  }
 
   /// Adds [callback] to the list of dispose callbacks.
   void onDispose(ItemDisposeCallback callback) {
-    itemMetaData.disposeCallbacks.add(callback);
+    itemMetaData.safeAddDisposeCallback(callback);
   }
 
+  void removeDisposeCallback(ItemDisposeCallback callback) {
+    itemMetaData.disposeCallbacks.remove(callback);
+  }
+}
+
+class LazyRef implements Ref {
+  /// Creates Ref without having to initialize the globalKey, tag and args
+  /// in the constructor.
+  /// You must call [init] later, before passing it to the actual item factory!
+  LazyRef({
+    required ItemStore store,
+    Object? globalKey,
+    this.tag,
+    bool checkKeyInStore = false,
+    this.isOverridden = false,
+    List<Object>? dependencies,
+    CallableItemStore? localStore,
+  })  : _store = store,
+        _globalKey = globalKey,
+        local = localStore ?? CallableItemStore(SimpleItemStore()),
+        _checkKeyInStore = checkKeyInStore,
+        _isInitialized = false,
+        itemMetaData = ItemMetaData(dependecies: dependencies);
+
+  @override
+  final ItemStore _store;
+
+  /// An [ItemStore] exclusive to this [Ref], so you can reuse factory functions
+  /// to create local data.
+  ///
+  /// It also adds a convenience call method for [ItemStore.get] to reduce
+  /// boilerplate.
+  @override
+  final CallableItemStore local;
+
+  @override
+  final ItemMetaData itemMetaData;
+
+  bool _isInitialized;
+  bool get isInitialized => _isInitialized;
+
+  final bool isOverridden;
+
+  Object? _globalKey;
+
+  @override
+  Object get globalKey {
+    if (!isInitialized) {
+      throw UninitializedException(
+          'globalKey was not initialized. You probably just forgot to wrap the factory with ".p()"');
+    }
+
+    return _globalKey!;
+  }
+
+  /// The tag of the item if not null.
+  @override
+  final Object? tag;
+
+  late final Object? _args;
+  @override
+  Object? get args {
+    if (!isInitialized) {
+      throw UninitializedException('args was not initialized.');
+    }
+
+    return _args;
+  }
+
+  final bool _checkKeyInStore;
+
+  /// Inits globalKey, tag and args on the first call. Consecutive calls will
+  /// be ignored.
+  void init({
+    required Function itemFactory,
+    Object? args,
+  }) {
+    if (_isInitialized) return;
+    _isInitialized = true;
+
+    _args = args;
+
+    _globalKey ??= ItemStore.globalKeyFrom(itemFactory: itemFactory, tag: tag);
+
+    if (isOverridden) throw OverriddenException();
+
+    if (_checkKeyInStore) {
+      final value = _store.cache[globalKey];
+
+      if (ItemStore.dependciesAreSameFor(
+        value,
+        newDependencies: itemMetaData.dependecies,
+      )) {
+        throw RedundantKeyException(value!.data);
+      }
+    }
+  }
+
+  @override
+  T call<T>(
+    ItemFactory<T> itemFactory, {
+    Object? globalKey,
+    Object? tag,
+    List<Object>? dependencies,
+  }) =>
+      _store.get<T>(
+        itemFactory,
+        globalKey: globalKey,
+        tag: tag,
+        dependencies: dependencies,
+      );
+
+  @override
+  T write<T>(
+    ItemFactory<T> itemFactory, {
+    Object? globalKey,
+    Object? tag,
+  }) {
+    return _store.write<T>(
+      itemFactory,
+      globalKey: globalKey,
+      tag: tag,
+    );
+  }
+
+  @override
+  T? read<T>(ItemFactory<T> itemFactory, {Object? tag}) =>
+      _store.read<T>(itemFactory, tag: tag);
+
+  @override
+  T? readByKey<T>(Object globalKey) => _store.readByKey<T>(globalKey);
+
+  @override
+  T? readValue<T>([Object? tag]) =>
+      _store.readByKey<T>(ItemStore.valueKeyFrom(T, tag: tag));
+
+  @override
+  T writeValue<T>(T value, {Object? tag}) {
+    return _store.write<T>(
+      (_) => value,
+      globalKey: ItemStore.valueKeyFrom(T, tag: tag),
+    );
+  }
+
+  @override
+  void disposeSelf() {
+    _store.disposeItem(globalKey);
+  }
+
+  /// Adds [callback] to the list of dispose callbacks, if not already added.
+  @override
+  void onDispose(ItemDisposeCallback callback) {
+    itemMetaData.safeAddDisposeCallback(callback);
+  }
+
+  @override
   void removeDisposeCallback(ItemDisposeCallback callback) {
     itemMetaData.disposeCallbacks.remove(callback);
   }
@@ -91,12 +261,7 @@ extension RefUtilsX on Ref {
   ///
   /// Returns the provided [object].
   T disposable<T extends Object>(T object, [void Function(T)? dispose]) {
-    // dispose object when the item is being removed from the store
-    onDispose(
-      dispose == null ? (object as dynamic).dispose : () => dispose(object),
-    );
-
-    return object;
+    return itemMetaData.safeAddDisposableObject<T>(object, dispose);
   }
 
   /// Bind the given [object] object to this ref, meaning if any of them gets disposed,
@@ -104,30 +269,46 @@ extension RefUtilsX on Ref {
   ///
   /// [object] must have:
   /// - a void dispose() function or provide [disposeObject],
-  /// - a void onDispose(void Function()) function or provide [disposeItem].
+  /// - a void onDispose(void Function()) function or provide [onObjectDispose].
   ///
   /// See also:
   /// - [disposable] for one way binding,
   /// - [DisposableMixin] to add the required functions to your class.
-  T bindTo<T>(
+  T bindTo<T extends Object>(
     T object, {
-    void Function(T)? disposeObject,
-    void Function(void Function())? disposeItem,
+    void Function(T)? dispose,
+    void Function(void Function())? onObjectDispose,
   }) {
-    // dispose object when the item is being removed from the store
-    onDispose(
-      disposeObject == null
-          ? (object as dynamic).dispose
-          : () => disposeObject(object),
+    return itemMetaData.safeBindTo<T>(
+      object,
+      dispose: dispose,
+      onObjectDispose: onObjectDispose,
+      disposeFromStore: disposeSelf,
     );
+  }
 
-    // dispose item from the store, when object gets disposed
-    if (disposeItem == null) {
-      (object as dynamic).onDispose(disposeSelf);
-    } else {
-      disposeItem(disposeSelf);
-    }
+  /// Calls the provided function only once.
+  /// If you want to use more than one function to be called once,
+  /// use the [tag] to differentiate them.
+  void callOnce(Function() oneOffFun, {Object? tag}) {
+    local(((_) => oneOffFun()).p(), globalKey: (callOnce, tag));
+  }
+}
 
-    return object;
+extension ObjectUtilsForRefX<T extends Object> on T {
+  T disposeWith(Ref ref, [void Function(T)? dispose]) {
+    return ref.disposable<T>(this, dispose);
+  }
+
+  T bindTo(
+    Ref ref, {
+    void Function(T)? dispose,
+    void Function(void Function() disposeItemFromStore)? onObjectDispose,
+  }) {
+    return ref.bindTo<T>(
+      this,
+      dispose: dispose,
+      onObjectDispose: onObjectDispose,
+    );
   }
 }

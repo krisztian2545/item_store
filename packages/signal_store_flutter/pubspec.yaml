@@ -1,6 +1,6 @@
 name: signal_store_flutter
 description: "A new Flutter package project."
-version: 0.0.1
+version: 0.2.1
 homepage:
 
 environment:
@@ -20,7 +20,7 @@ dependencies:
     git:
       url: https://github.com/krisztian2545/item_store
       path: packages/signal_store
-  signals_flutter: ^5.4.0
+  signals_flutter: ^6.0.2
 
 dev_dependencies:
   flutter_test:

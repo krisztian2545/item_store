@@ -14,21 +14,21 @@ class ItemHandler extends StatefulWidget {
         );
 
   final Widget? child;
-  final Widget Function(BuildContext, Widget?)? builder;
+  final Widget Function(BuildContext, WidgetRef, Widget?)? builder;
 
   /// Initialize store items here.
-  /// It's called inside the [State.didChangeDependencies] method.
-  final void Function(ItemStore)? init;
+  /// It will be called inside the [State.didChangeDependencies] method.
+  final void Function(BuildContext, WidgetRef)? init;
 
   /// A list of global keys of items, that you want to dispose
-  /// when this widget gets disposed.
+  /// from the inherited store, when this widget gets disposed.
   final List<Object>? disposables;
 
   @override
   State<ItemHandler> createState() => _ItemHandlerState();
 }
 
-class _ItemHandlerState extends State<ItemHandler> {
+class _ItemHandlerState extends State<ItemHandler> with WidgetRefMixin {
   late ItemStore _store;
 
   late void Function() _onDidChangeDependencies = _onFirstCallToDidChangeDeps;
@@ -38,7 +38,8 @@ class _ItemHandlerState extends State<ItemHandler> {
     // an item from the inherited store.
 
     // listen to inherited store and call widget.init
-    _getStoreAndInit();
+    _store = context.store;
+    _init();
 
     // run the other function on consequent dependency change calls
     _onDidChangeDependencies = _onConsequentCallsToDidChangeDeps;
@@ -46,15 +47,18 @@ class _ItemHandlerState extends State<ItemHandler> {
 
   void _onConsequentCallsToDidChangeDeps() {
     // dispose items in the old store
-    _disposeItems(widget.disposables);
+    final newStore = context.store;
+    if (_store != newStore) {
+      _disposeItems(_store, widget.disposables);
+      _store = newStore;
+    }
 
-    // listen to new inherited store and recall widget.init
-    _getStoreAndInit();
+    // recall widget.init
+    _init();
   }
 
-  void _getStoreAndInit() {
-    _store = context.store;
-    widget.init?.call(_store);
+  void _init() {
+    widget.init?.call(context, ref);
   }
 
   @override
@@ -66,32 +70,32 @@ class _ItemHandlerState extends State<ItemHandler> {
   @override
   void didUpdateWidget(covariant ItemHandler oldWidget) {
     if (oldWidget.init != widget.init) {
-      widget.init?.call(_store);
+      _init();
     }
 
     // prevent memory leaks
     final leaks = oldWidget.disposables?.where(
       (d) => !(widget.disposables?.contains(d) ?? false),
     );
-    _disposeItems(leaks);
+    _disposeItems(_store, leaks);
 
     super.didUpdateWidget(oldWidget);
   }
 
   @override
   Widget build(BuildContext context) {
-    return widget.builder?.call(context, widget.child) ?? widget.child!;
+    return widget.builder?.call(context, ref, widget.child) ?? widget.child!;
   }
 
-  void _disposeItems(Iterable<Object>? disposables) {
+  void _disposeItems(ItemStore store, Iterable<Object>? disposables) {
     if (disposables?.isNotEmpty ?? false) {
-      _store.disposeItems(disposables!);
+      store.disposeItems(disposables!);
     }
   }
 
   @override
   void dispose() {
-    _disposeItems(widget.disposables);
+    _disposeItems(_store, widget.disposables);
     super.dispose();
   }
 }

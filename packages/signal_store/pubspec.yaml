@@ -1,6 +1,6 @@
 name: signal_store
 description: A starting point for Dart libraries or applications.
-version: 0.0.1
+version: 0.2.0
 # repository: https://github.com/my_org/my_repo
 
 environment:
@@ -11,7 +11,7 @@ dependencies:
   item_store:
     git:
       url: https://github.com/krisztian2545/item_store
-  signals_core: ^5.4.0
+  signals_core: ^6.0.2
 
 dev_dependencies:
   lints: ^3.0.0
