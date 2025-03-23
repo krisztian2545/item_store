@@ -13,109 +13,103 @@ class RedundantKeyException<T> implements Exception {
   final T readValue;
 }
 
+// class Ref {
+//   Ref({
+//     required ItemStore store,
+//     required this.globalKey,
+//     this.args,
+//     CallableItemStore? localStore,
+//   })  : _store = store,
+//         local = localStore ?? CallableItemStore(SimpleItemStore());
+
+//   final ItemStore _store;
+
+//   /// An [ItemStore] exclusive to this [Ref], so you can reuse factory functions
+//   /// to create local data.
+//   ///
+//   /// It also adds a convenience call method for [ItemStore.get] to reduce
+//   /// boilerplate.
+//   final CallableItemStore local;
+
+//   /// The global key of the item.
+//   final Object globalKey;
+
+//   /// The tag of the item if not null.
+//   final Object? args;
+
+//   final ItemMetaData itemMetaData = ItemMetaData();
+
+//   T call<T>(
+//     ItemFactory<T> itemFactory, {
+//     Object? globalKey,
+//     Object? tag,
+//     List<Object>? dependencies,
+//   }) =>
+//       _store.get<T>(
+//         itemFactory,
+//         globalKey: globalKey,
+//         tag: tag,
+//         dependencies: dependencies,
+//       );
+
+//   T write<T>(
+//     ItemFactory<T> itemFactory, {
+//     Object? globalKey,
+//     Object? tag,
+//   }) {
+//     return _store.write<T>(
+//       itemFactory,
+//       globalKey: globalKey,
+//       tag: tag,
+//     );
+//   }
+
+//   T? read<T>(ItemFactory<T> itemFactory, {Object? tag}) =>
+//       _store.read<T>(itemFactory, tag: tag);
+
+//   T? readByKey<T>(Object globalKey) => _store.readByKey<T>(globalKey);
+
+//   T? readValue<T>([Object? tag]) =>
+//       _store.readByKey<T>(ItemStore.valueKeyFrom(T, tag: tag));
+
+//   T writeValue<T>(T value, {Object? tag}) {
+//     return _store.write<T>(
+//       (_) => value,
+//       globalKey: ItemStore.valueKeyFrom(T, tag: tag),
+//     );
+//   }
+
+//   void disposeSelf() {
+//     _store.disposeItem(globalKey);
+//   }
+
+//   /// Adds [callback] to the list of dispose callbacks.
+//   void onDispose(ItemDisposeCallback callback) {
+//     itemMetaData.safeAddDisposeCallback(callback);
+//   }
+
+//   void removeDisposeCallback(ItemDisposeCallback callback) {
+//     itemMetaData.disposeCallbacks.remove(callback);
+//   }
+// }
+
 class Ref {
-  Ref({
-    required ItemStore store,
-    required this.globalKey,
-    this.tag,
-    this.args,
-    CallableItemStore? localStore,
-  })  : _store = store,
-        local = localStore ?? CallableItemStore(SimpleItemStore());
-
-  final ItemStore _store;
-
-  /// An [ItemStore] exclusive to this [Ref], so you can reuse factory functions
-  /// to create local data.
-  ///
-  /// It also adds a convenience call method for [ItemStore.get] to reduce
-  /// boilerplate.
-  final CallableItemStore local;
-
-  /// The global key of the item.
-  final Object globalKey;
-
-  /// The tag of the item if not null.
-  final Object? tag;
-
-  final Object? args;
-
-  final ItemMetaData itemMetaData = ItemMetaData();
-
-  T call<T>(
-    ItemFactory<T> itemFactory, {
-    Object? globalKey,
-    Object? tag,
-    List<Object>? dependencies,
-  }) =>
-      _store.get<T>(
-        itemFactory,
-        globalKey: globalKey,
-        tag: tag,
-        dependencies: dependencies,
-      );
-
-  T write<T>(
-    ItemFactory<T> itemFactory, {
-    Object? globalKey,
-    Object? tag,
-  }) {
-    return _store.write<T>(
-      itemFactory,
-      globalKey: globalKey,
-      tag: tag,
-    );
-  }
-
-  T? read<T>(ItemFactory<T> itemFactory, {Object? tag}) =>
-      _store.read<T>(itemFactory, tag: tag);
-
-  T? readByKey<T>(Object globalKey) => _store.readByKey<T>(globalKey);
-
-  T? readValue<T>([Object? tag]) =>
-      _store.readByKey<T>(ItemStore.valueKeyFrom(T, tag: tag));
-
-  T writeValue<T>(T value, {Object? tag}) {
-    return _store.write<T>(
-      (_) => value,
-      globalKey: ItemStore.valueKeyFrom(T, tag: tag),
-    );
-  }
-
-  void disposeSelf() {
-    _store.disposeItem(globalKey);
-  }
-
-  /// Adds [callback] to the list of dispose callbacks.
-  void onDispose(ItemDisposeCallback callback) {
-    itemMetaData.safeAddDisposeCallback(callback);
-  }
-
-  void removeDisposeCallback(ItemDisposeCallback callback) {
-    itemMetaData.disposeCallbacks.remove(callback);
-  }
-}
-
-class LazyRef implements Ref {
   /// Creates Ref without having to initialize the globalKey, tag and args
   /// in the constructor.
   /// You must call [init] later, before passing it to the actual item factory!
-  LazyRef({
+  Ref({
     required ItemStore store,
     Object? globalKey,
-    this.tag,
     bool checkKeyInStore = false,
     this.isOverridden = false,
-    List<Object>? dependencies,
     CallableItemStore? localStore,
   })  : _store = store,
         _globalKey = globalKey,
         local = localStore ?? CallableItemStore(SimpleItemStore()),
         _checkKeyInStore = checkKeyInStore,
         _isInitialized = false,
-        itemMetaData = ItemMetaData(dependecies: dependencies);
+        itemMetaData = ItemMetaData();
 
-  @override
   final ItemStore _store;
 
   /// An [ItemStore] exclusive to this [Ref], so you can reuse factory functions
@@ -123,10 +117,8 @@ class LazyRef implements Ref {
   ///
   /// It also adds a convenience call method for [ItemStore.get] to reduce
   /// boilerplate.
-  @override
   final CallableItemStore local;
 
-  @override
   final ItemMetaData itemMetaData;
 
   bool _isInitialized;
@@ -136,7 +128,6 @@ class LazyRef implements Ref {
 
   Object? _globalKey;
 
-  @override
   Object get globalKey {
     if (!isInitialized) {
       throw UninitializedException(
@@ -146,12 +137,7 @@ class LazyRef implements Ref {
     return _globalKey!;
   }
 
-  /// The tag of the item if not null.
-  @override
-  final Object? tag;
-
   late final Object? _args;
-  @override
   Object? get args {
     if (!isInitialized) {
       throw UninitializedException('args was not initialized.');
@@ -173,82 +159,89 @@ class LazyRef implements Ref {
 
     _args = args;
 
-    _globalKey ??= ItemStore.globalKeyFrom(itemFactory: itemFactory, tag: tag);
+    _globalKey ??=
+        ItemStore.globalKeyFrom(itemFactory: itemFactory, args: args);
 
     if (isOverridden) throw OverriddenException();
 
     if (_checkKeyInStore) {
       final value = _store.cache[globalKey];
 
-      if (ItemStore.dependciesAreSameFor(
-        value,
-        newDependencies: itemMetaData.dependecies,
-      )) {
-        throw RedundantKeyException(value!.data);
+      if (value != null) {
+        throw RedundantKeyException(value.data);
       }
     }
   }
 
-  @override
-  T call<T>(
-    ItemFactory<T> itemFactory, {
-    Object? globalKey,
-    Object? tag,
-    List<Object>? dependencies,
-  }) =>
-      _store.get<T>(
-        itemFactory,
-        globalKey: globalKey,
-        tag: tag,
-        dependencies: dependencies,
-      );
-
-  @override
-  T write<T>(
-    ItemFactory<T> itemFactory, {
-    Object? globalKey,
-    Object? tag,
-  }) {
-    return _store.write<T>(
-      itemFactory,
-      globalKey: globalKey,
-      tag: tag,
-    );
-  }
-
-  @override
-  T? read<T>(ItemFactory<T> itemFactory, {Object? tag}) =>
-      _store.read<T>(itemFactory, tag: tag);
-
-  @override
-  T? readByKey<T>(Object globalKey) => _store.readByKey<T>(globalKey);
-
-  @override
-  T? readValue<T>([Object? tag]) =>
-      _store.readByKey<T>(ItemStore.valueKeyFrom(T, tag: tag));
-
-  @override
-  T writeValue<T>(T value, {Object? tag}) {
-    return _store.write<T>(
-      (_) => value,
-      globalKey: ItemStore.valueKeyFrom(T, tag: tag),
-    );
-  }
-
-  @override
   void disposeSelf() {
-    _store.disposeItem(globalKey);
+    _store.removeItem(globalKey);
   }
 
   /// Adds [callback] to the list of dispose callbacks, if not already added.
-  @override
   void onDispose(ItemDisposeCallback callback) {
     itemMetaData.safeAddDisposeCallback(callback);
   }
 
-  @override
   void removeDisposeCallback(ItemDisposeCallback callback) {
     itemMetaData.disposeCallbacks.remove(callback);
+  }
+
+  // ------------------------- [ItemStore] proxy API -------------------------
+
+  T? readByKey<T>(Object globalKey) => _store.readByKey<T>(globalKey);
+
+  T write<T>(ItemFactory<T> itemFactory, {Object? globalKey}) {
+    return _store.write<T>(itemFactory, globalKey: globalKey);
+  }
+
+  T? read<T>(ItemFactory<T> itemFactory) => _store.read<T>(itemFactory);
+
+  T call<T>(ItemFactory<T> itemFactory, {Object? globalKey}) {
+    return _store.get<T>(itemFactory, globalKey: globalKey);
+  }
+
+  void remove<T>(ItemFactory<T> itemFactory) {
+    _store.remove<T>(itemFactory);
+  }
+
+  T run<T>(ItemFactory<T> itemFactory) {
+    return _store.run<T>(itemFactory);
+  }
+
+  T writeValue<T>(
+    T value, {
+    Object? tag,
+    bool disposable = false,
+    void Function(T)? dispose,
+  }) {
+    return _store.writeValue<T>(
+      value,
+      tag: tag,
+      disposable: disposable,
+      dispose: dispose,
+    );
+  }
+
+  T? readValue<T>([Object? tag]) => _store.readValue<T>(tag);
+
+  void removeValue<T>([Object? tag]) {
+    _store.removeValue<T>(tag);
+  }
+
+  void overrideFactory<T>(ItemFactory<T> from, ItemFactory<T> to) {
+    _store.overrideFactory<T>(from, to);
+  }
+
+  void removeOverrideFrom(ItemFactory factory) {
+    _store.removeOverrideFrom(factory);
+  }
+
+  void removeItem(Object globalKey) {
+    _store.removeItem(globalKey);
+  }
+
+  void removeItems(Iterable<Object> globalKeys) {
+    _store.removeItems(globalKeys);
   }
 }
 

@@ -17,7 +17,6 @@ class ItemMetaData {
   ItemMetaData({
     List<ItemDisposeCallback>? disposeCallbacks,
     List<Object>? disposableObjects,
-    this.dependecies,
   })  : disposeCallbacks = disposeCallbacks ?? [],
         disposableObjects = disposableObjects ?? [];
 
@@ -25,8 +24,6 @@ class ItemMetaData {
 
   /// A list of objects that are registered for disposal in [disposeCallbacks].
   final List<Object> disposableObjects;
-
-  final List<Object>? dependecies;
 
   void safeAddDisposeCallback(ItemDisposeCallback callback) {
     if (disposeCallbacks.contains(callback)) return;

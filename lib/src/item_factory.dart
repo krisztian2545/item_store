@@ -4,7 +4,7 @@ typedef ItemFactory<R> = R Function(Ref);
 
 extension ItemFactoryX<R> on ItemFactory<R> {
   ItemFactory<R> p() => (ref) {
-        (ref as LazyRef).init(itemFactory: this);
+        ref.init(itemFactory: this);
 
         return this(ref);
       };
@@ -16,7 +16,7 @@ typedef ItemFactoryWithArgs<R, A> = R Function(Ref, A);
 
 extension ItemFactoryWithArgsX<R, A> on ItemFactoryWithArgs<R, A> {
   ItemFactory<R> p(A arg) => (ref) {
-        (ref as LazyRef).init(itemFactory: this, args: arg);
+        ref.init(itemFactory: this, args: arg);
 
         return this(ref, arg);
       };
@@ -28,7 +28,7 @@ typedef ItemFactoryWithOpArgs<R, A> = R Function(Ref, [A]);
 
 extension ItemFactoryWithOpArgsX<R, A> on ItemFactoryWithOpArgs<R, A> {
   ItemFactory<R> p([A? arg]) => (ref) {
-        (ref as LazyRef).init(itemFactory: this, args: arg);
+        ref.init(itemFactory: this, args: arg);
 
         return arg == null ? this(ref) : this(ref, arg);
       };
@@ -40,9 +40,9 @@ typedef ItemFactoryWithTwoArgs<R, A, B> = R Function(Ref, A, B);
 
 extension ItemFactoryWithTwoArgsX<R, A, B> on ItemFactoryWithTwoArgs<R, A, B> {
   ItemFactory<R> p(A arg1, B arg2) => (ref) {
-        (ref as LazyRef).init(
+        ref.init(
           itemFactory: this,
-          args: List.unmodifiable([arg1, arg2]),
+          args: (arg1, arg2),
         );
 
         return this(ref, arg1, arg2);
@@ -56,9 +56,9 @@ typedef ItemFactoryWithArgNOpArg<R, A, B> = R Function(Ref, A, [B]);
 extension ItemFactoryWithArgNOpArgX<R, A, B>
     on ItemFactoryWithArgNOpArg<R, A, B> {
   ItemFactory<R> p(A arg1, [B? arg2]) => (ref) {
-        (ref as LazyRef).init(
+        ref.init(
           itemFactory: this,
-          args: List.unmodifiable([arg1, arg2]),
+          args: (arg1, arg2),
         );
 
         if (arg2 == null) {
@@ -76,9 +76,9 @@ typedef ItemFactoryWithTwoOpArg<R, A, B> = R Function(Ref, [A, B]);
 extension ItemFactoryWithTwoOpArgX<R, A, B>
     on ItemFactoryWithTwoOpArg<R, A, B> {
   ItemFactory<R> p([A? arg1, B? arg2]) => (ref) {
-        (ref as LazyRef).init(
+        ref.init(
           itemFactory: this,
-          args: List.unmodifiable([arg1, arg2]),
+          args: (arg1, arg2),
         );
 
         if (arg1 == null) {
