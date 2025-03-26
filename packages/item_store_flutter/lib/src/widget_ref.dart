@@ -20,47 +20,6 @@ class WidgetRef {
   /// boilerplate.
   final CallableItemStore local;
 
-  T call<T>(
-    ItemFactory<T> itemFactory, {
-    Object? globalKey,
-    Object? tag,
-    List<Object>? dependencies,
-  }) =>
-      _store.get<T>(
-        itemFactory,
-        globalKey: globalKey,
-        tag: tag,
-        dependencies: dependencies,
-      );
-
-  T write<T>(
-    ItemFactory<T> itemFactory, {
-    Object? globalKey,
-    Object? tag,
-  }) {
-    return _store.write<T>(
-      itemFactory,
-      globalKey: globalKey,
-      tag: tag,
-    );
-  }
-
-  T? read<T>(ItemFactory<T> itemFactory, {Object? tag}) {
-    return _store.read<T>(itemFactory, tag: tag);
-  }
-
-  T? readByKey<T>(Object globalKey) => _store.readByKey<T>(globalKey);
-
-  T? readValue<T>([Object? tag]) => _store.readValue<T>(tag);
-
-  T writeValue<T>(
-    T value, {
-    Object? tag,
-    bool disposable = false,
-    void Function(T)? dispose,
-  }) =>
-      _store.writeValue<T>(value, disposable: disposable, dispose: dispose);
-
   final _disposeCallbacks = <void Function()>[];
   final _disposableObjects = <Object>[];
 
@@ -107,6 +66,53 @@ class WidgetRef {
       callback();
     }
   }
+
+  // -------------------------- ItemStore Proxy API --------------------------
+
+  T call<T>(
+    ItemFactory<T> itemFactory, {
+    Object? globalKey,
+    Object? tag,
+    List<Object>? dependencies,
+  }) =>
+      _store.get<T>(
+        itemFactory,
+        globalKey: globalKey,
+        tag: tag,
+        dependencies: dependencies,
+      );
+
+  T write<T>(
+    ItemFactory<T> itemFactory, {
+    Object? globalKey,
+    Object? tag,
+  }) {
+    return _store.write<T>(
+      itemFactory,
+      globalKey: globalKey,
+      tag: tag,
+    );
+  }
+
+  T run<T>(ItemFactory action) {
+    return _store.run<T>(action);
+  }
+
+  T? read<T>(ItemFactory<T> itemFactory, {Object? tag}) {
+    return _store.read<T>(itemFactory, tag: tag);
+  }
+
+  T? readByKey<T>(Object globalKey) => _store.readByKey<T>(globalKey);
+
+  T? readValue<T>([Object? tag]) => _store.readValue<T>(tag);
+
+  T writeValue<T>(
+    T value, {
+    Object? tag,
+    bool disposable = false,
+    void Function(T)? dispose,
+  }) =>
+      _store.writeValue<T>(value, disposable: disposable, dispose: dispose);
 }
 
 extension WidgetRefX on WidgetRef {

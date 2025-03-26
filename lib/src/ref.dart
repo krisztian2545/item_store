@@ -190,6 +190,24 @@ class LazyRef implements Ref {
   }
 
   @override
+  void disposeSelf() {
+    _store.disposeItem(globalKey);
+  }
+
+  /// Adds [callback] to the list of dispose callbacks, if not already added.
+  @override
+  void onDispose(ItemDisposeCallback callback) {
+    itemMetaData.safeAddDisposeCallback(callback);
+  }
+
+  @override
+  void removeDisposeCallback(ItemDisposeCallback callback) {
+    itemMetaData.disposeCallbacks.remove(callback);
+  }
+
+  // -------------------------- ItemStore Proxy API --------------------------
+
+  @override
   T call<T>(
     ItemFactory<T> itemFactory, {
     Object? globalKey,
@@ -216,6 +234,10 @@ class LazyRef implements Ref {
     );
   }
 
+  T run<T>(ItemFactory<T> action) {
+    return _store.run<T>(action);
+  }
+
   @override
   T? read<T>(ItemFactory<T> itemFactory, {Object? tag}) =>
       _store.read<T>(itemFactory, tag: tag);
@@ -233,22 +255,6 @@ class LazyRef implements Ref {
       (_) => value,
       globalKey: ItemStore.valueKeyFrom(T, tag: tag),
     );
-  }
-
-  @override
-  void disposeSelf() {
-    _store.disposeItem(globalKey);
-  }
-
-  /// Adds [callback] to the list of dispose callbacks, if not already added.
-  @override
-  void onDispose(ItemDisposeCallback callback) {
-    itemMetaData.safeAddDisposeCallback(callback);
-  }
-
-  @override
-  void removeDisposeCallback(ItemDisposeCallback callback) {
-    itemMetaData.disposeCallbacks.remove(callback);
   }
 }
 

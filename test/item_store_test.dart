@@ -125,6 +125,51 @@ void main() {
       expect(firstItem, isNot(secondItem));
       expect(itemData, 2);
     });
+
+    test('run', () {
+      final store = ItemStore();
+      int callTimes = 0;
+      int disposeCallTimes = 0;
+
+      int action(Ref ref) {
+        ref.onDispose(() => disposeCallTimes++);
+        return ++callTimes;
+      }
+
+      expect(store.cache.containsKey(action), false);
+      expect(callTimes, 0);
+      expect(disposeCallTimes, 0);
+
+      final item = store.run(action.p());
+
+      expect(store.cache.containsKey(action), false);
+      expect(callTimes, 1);
+      expect(disposeCallTimes, 1);
+      expect(item, callTimes);
+    });
+
+    test('run with params', () {
+      final store = ItemStore();
+      int callTimes = 0;
+      int disposeCallTimes = 0;
+
+      int action(Ref ref, int step) {
+        ref.onDispose(() => disposeCallTimes += step);
+        callTimes += step;
+        return callTimes;
+      }
+
+      expect(store.cache.containsKey(action), false);
+      expect(callTimes, 0);
+      expect(disposeCallTimes, 0);
+
+      final item = store.run(action.p(2));
+
+      expect(store.cache.containsKey(action), false);
+      expect(callTimes, 2);
+      expect(disposeCallTimes, 2);
+      expect(item, callTimes);
+    });
   });
 
   group('Ref', () {

@@ -128,6 +128,8 @@ abstract interface class ItemStore {
     List<Object>? dependencies,
   });
 
+  T run<T>(ItemFactory<T> action);
+
   /// Stores the given [value] with a global key of it's type ([T]), or as a
   /// record consisting of [T] and [tag] if it's not null (like (T, tag)).
   ///
@@ -338,6 +340,40 @@ class SimpleItemStore implements ItemStore {
     }
 
     _cache[key] = Item<T>(result, ref.itemMetaData);
+
+    return result;
+  }
+
+  @override
+  T run<T>(ItemFactory<T> action) {
+    final actionOverride = _overrides[action];
+    final isOverridden = actionOverride != null;
+
+    final ref = LazyRef(
+      store: this,
+      checkKeyInStore: false,
+      isOverridden: isOverridden,
+    );
+
+    late final T result;
+
+    if (isOverridden) {
+      // set args in ref
+      try {
+        // should throw OverriddenException
+        action(ref);
+      } on OverriddenException {
+        // TODO use correct function type and pass args?
+        // TODO why did this pass tests when I didn't store it in result?
+        result = actionOverride(ref);
+      }
+    } else {
+      result = action(ref);
+    }
+    // schedule the disposal of the item's local store
+    ref.onDispose(() => ref.local.dispose());
+
+    Item<T>(result, ref.itemMetaData).dispose();
 
     return result;
   }
