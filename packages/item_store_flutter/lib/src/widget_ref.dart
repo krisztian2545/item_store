@@ -94,7 +94,7 @@ class WidgetRef {
     );
   }
 
-  T run<T>(ItemFactory action) {
+  T run<T>(ItemFactory<T> action) {
     return _store.run<T>(action);
   }
 
