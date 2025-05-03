@@ -83,6 +83,7 @@ class _ItemStoreProviderState extends State<ItemStoreProvider> {
   @override
   void didUpdateWidget(covariant ItemStoreProvider oldWidget) {
     if (oldWidget.store != widget.store) {
+      oldWidget.disposeBehavior.dispose(oldWidget, _store);
       _store = _getStore();
     }
     super.didUpdateWidget(oldWidget);
