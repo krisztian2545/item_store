@@ -22,25 +22,25 @@ void main() {
   group('ItemStore', () {
     test('write', () {
       final (store, _, itemFactory) = initialVariables();
-      final item = store.write(itemFactory.p());
+      final item = store.write(itemFactory);
       expect(item, 42);
     });
 
     test('write with global key', () {
       final (store, key, itemFactory) = initialVariables();
-      final item = store.write(itemFactory.p(), globalKey: key);
+      final item = store.write(itemFactory, globalKey: key);
       expect(item, 42);
     });
 
     test('read', () {
       final (store, _, itemFactory) = initialVariables();
-      store.write(itemFactory.p());
-      expect(store.read(itemFactory.p()), 42);
+      store.write(itemFactory);
+      expect(store.read(itemFactory), 42);
     });
 
     test('readByKey', () {
       final (store, key, itemFactory) = initialVariables();
-      store.write(itemFactory.p(), globalKey: key);
+      store.write(itemFactory, globalKey: key);
       expect(store.readByKey(key), 42);
     });
 
@@ -48,8 +48,8 @@ void main() {
       final (store, key, itemFactory) = initialVariables();
       int otherFactory(Ref _) => 0;
 
-      expect(store.get<int>(itemFactory.p(), globalKey: key), 42);
-      expect(store.get<int>(otherFactory.p(), globalKey: key), 42);
+      expect(store.get<int>(itemFactory, globalKey: key), 42);
+      expect(store.get<int>(otherFactory, globalKey: key), 42);
     });
 
     group('Ref', () {
@@ -74,7 +74,7 @@ void main() {
         // final (getCount, incCount) = store.writer(counter)();
         // store.writer((_, x) => x, globalKey: 'count')(5);
 
-        store.write(itemFactory.p(), globalKey: key);
+        store.write(itemFactory, globalKey: key);
         store.disposeItem(key);
 
         expect(disposed, true);
@@ -88,9 +88,8 @@ void main() {
         final (store, key) = initStoreAndTypeKey();
         final Type otherKey = OtherCustomKey;
 
-        final item = store.write(((_) => 42).p(), globalKey: key);
-        final otherItem =
-            store.write(((_) => 'other').p(), globalKey: otherKey);
+        final item = store.write(((_) => 42), globalKey: key);
+        final otherItem = store.write(((_) => 'other'), globalKey: otherKey);
 
         expect(item, 42);
         expect(otherItem, 'other');
@@ -100,8 +99,8 @@ void main() {
         final (store, key) = initStoreAndTypeKey();
         final Type otherKey = OtherCustomKey;
 
-        store.write(((_) => 42).p(), globalKey: key);
-        store.write(((_) => 'other').p(), globalKey: otherKey);
+        store.write(((_) => 42), globalKey: key);
+        store.write(((_) => 'other'), globalKey: otherKey);
 
         expect(store.readByKey(key), 42);
         expect(store.readByKey(otherKey), 'other');
@@ -111,8 +110,8 @@ void main() {
         final (store, key) = initStoreAndTypeKey();
         final Type otherKey = OtherCustomKey;
 
-        expect(store.get(((_) => 42).p(), globalKey: key), 42);
-        expect(store.get(((_) => 'other').p(), globalKey: otherKey), 'other');
+        expect(store.get(((_) => 42), globalKey: key), 42);
+        expect(store.get(((_) => 'other'), globalKey: otherKey), 'other');
       });
     });
 
@@ -165,68 +164,68 @@ void main() {
       });
     });
 
-    group('ItemStore "p" syntax', () {
-      test('write with parameters', () {
-        final (store, _, _) = initialVariables();
-        int sum(Ref ref, List<int> args) =>
-            args.reduce((value, element) => value + element);
+    // group('ItemStore "p" syntax', () {
+    //   test('write with parameters', () {
+    //     final (store, _, _) = initialVariables();
+    //     int sum(Ref ref, List<int> args) =>
+    //         args.reduce((value, element) => value + element);
 
-        final item = store.write(sum.p([2, 20, 6, 14]));
+    //     final item = store.write(sum.p([2, 20, 6, 14]));
 
-        expect(item, 42);
-      });
+    //     expect(item, 42);
+    //   });
 
-      test('read', () {
-        final (store, _, _) = initialVariables();
-        int sum(Ref ref, List<int> args) =>
-            args.reduce((value, element) => value + element);
-        final args = [2, 20, 6, 14];
+    //   test('read', () {
+    //     final (store, _, _) = initialVariables();
+    //     int sum(Ref ref, List<int> args) =>
+    //         args.reduce((value, element) => value + element);
+    //     final args = [2, 20, 6, 14];
 
-        store.write(sum.p(args));
+    //     store.write(sum.p(args));
 
-        expect(store.read(sum.p(args)), 42);
-      });
+    //     expect(store.read(sum.p(args)), 42);
+    //   });
 
-      test('get by globalKey', () {
-        final (store, key, _) = initialVariables();
-        int numberOfBuilds = 0;
-        int sum(Ref ref, List<int> args) {
-          numberOfBuilds++;
-          return args.reduce((value, element) => value + element);
-        }
+    //   test('get by globalKey', () {
+    //     final (store, key, _) = initialVariables();
+    //     int numberOfBuilds = 0;
+    //     int sum(Ref ref, List<int> args) {
+    //       numberOfBuilds++;
+    //       return args.reduce((value, element) => value + element);
+    //     }
 
-        final args = [2, 20, 6, 14];
+    //     final args = [2, 20, 6, 14];
 
-        expect(store.get(sum.p(args), globalKey: key), 42);
-        expect(store.get(sum.p(args), globalKey: key), 42);
-        expect(numberOfBuilds, 1);
-      });
+    //     expect(store.get(sum.p(args), globalKey: key), 42);
+    //     expect(store.get(sum.p(args), globalKey: key), 42);
+    //     expect(numberOfBuilds, 1);
+    //   });
 
-      test('get with same tag multiple times', () {
-        final (store, key, _) = initialVariables();
-        int numberOfBuilds = 0;
-        int add(Ref ref, (int, int) args) {
-          numberOfBuilds++;
-          return args.$1 + args.$2;
-        }
+    //   test('get with same tag multiple times', () {
+    //     final (store, key, _) = initialVariables();
+    //     int numberOfBuilds = 0;
+    //     int add(Ref ref, (int, int) args) {
+    //       numberOfBuilds++;
+    //       return args.$1 + args.$2;
+    //     }
 
-        final params = (20, 22);
-        expect(store.get(add.p(params)), 42);
-        expect(store.get(add.p(params)), 42);
-        expect(numberOfBuilds, 1);
-      });
+    //     final params = (20, 22);
+    //     expect(store.get(add.p(params)), 42);
+    //     expect(store.get(add.p(params)), 42);
+    //     expect(numberOfBuilds, 1);
+    //   });
 
-      test('get with different tags', () {
-        final (store, key, _) = initialVariables();
-        int add(Ref ref, (int, int) args) {
-          return args.$1 + args.$2;
-        }
+    //   test('get with different tags', () {
+    //     final (store, key, _) = initialVariables();
+    //     int add(Ref ref, (int, int) args) {
+    //       return args.$1 + args.$2;
+    //     }
 
-        final params1 = (20, 22);
-        final params2 = (1, 3);
-        expect(store.get(add.p(params1)), 42);
-        expect(store.get(add.p(params2)), 4);
-      });
-    });
+    //     final params1 = (20, 22);
+    //     final params2 = (1, 3);
+    //     expect(store.get(add.p(params1)), 42);
+    //     expect(store.get(add.p(params2)), 4);
+    //   });
+    // });
   });
 }

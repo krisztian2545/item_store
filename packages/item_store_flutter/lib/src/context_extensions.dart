@@ -11,14 +11,20 @@ extension ItemStoreFlutterExtension on BuildContext {
 }
 
 extension ItemStoreFlutterShortcutsExtension on BuildContext {
+  T? readByKey<T>(Object globalKey) => store.readByKey<T>(globalKey);
+
   T write<T>(ItemFactory<T> itemFactory, {Object? globalKey}) {
     return store.write<T>(itemFactory, globalKey: globalKey);
   }
 
-  T? readByKey<T>(Object globalKey) => store.readByKey<T>(globalKey);
+  T? read<T>(ItemFactory<T> itemFactory) => store.read<T>(itemFactory);
 
   T get<T>(ItemFactory<T> itemFactory, {Object? globalKey}) {
     return store.get<T>(itemFactory, globalKey: globalKey);
+  }
+
+  T run<T>(ItemFactory<T> itemFactory) {
+    return store.run<T>(itemFactory);
   }
 
   T writeValue<T>(

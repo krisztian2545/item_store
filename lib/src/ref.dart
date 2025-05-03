@@ -9,6 +9,7 @@ class Ref {
     required this.globalKey,
     CallableItemStore? localStore,
   })  : _store = store,
+        _local = localStore,
         itemMetaData = ItemMetaData();
 
   final ItemStore _store;
@@ -23,7 +24,7 @@ class Ref {
   CallableItemStore get local => _lazyLocal();
 
   void _initLocal() {
-    _local = CallableItemStore(SimpleItemStore());
+    _local ??= CallableItemStore(SimpleItemStore());
   }
 
   CallableItemStore _getLocal() => _local!;

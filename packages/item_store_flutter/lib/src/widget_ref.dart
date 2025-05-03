@@ -6,7 +6,7 @@ class WidgetRef {
     required ItemStore store,
     CallableItemStore? localStore,
   })  : _store = store,
-        local = localStore ?? CallableItemStore(ItemStore());
+        _local = localStore;
 
   ItemStore _store;
 
@@ -18,35 +18,58 @@ class WidgetRef {
   ///
   /// It also adds a convenience call method for [ItemStoreUtilX.get] to reduce
   /// boilerplate.
-  final CallableItemStore local;
+  CallableItemStore? _local;
 
-  T call<T>(
-    ItemFactory<T> itemFactory, {
-    Object? globalKey,
-    Object? tag,
-    List<Object>? dependencies,
-  }) =>
-      _store.get<T>(
-        itemFactory,
-        globalKey: globalKey,
-        tag: tag,
-        dependencies: dependencies,
-      );
+  CallableItemStore get local => _lazyLocal();
 
-  T write<T>(
-    ItemFactory<T> itemFactory, {
-    Object? globalKey,
-    Object? tag,
-  }) {
-    return _store.write<T>(
-      itemFactory,
-      globalKey: globalKey,
-      tag: tag,
-    );
+  void _initLocal() {
+    _local ??= CallableItemStore(SimpleItemStore());
   }
 
-  T? read<T>(ItemFactory<T> itemFactory, {Object? tag}) {
-    return _store.read<T>(itemFactory, tag: tag);
+  CallableItemStore _getLocal() => _local!;
+  late CallableItemStore Function() _lazyLocal = () {
+    _initLocal();
+    _lazyLocal = _getLocal;
+    return _local!;
+  };
+
+  final _item = Item(null, ItemMetaData());
+  ItemMetaData get _metaData => _item.metaData;
+
+  void onDispose(void Function() callback) {
+    _metaData.safeAddDisposeCallback(callback);
+  }
+
+  void removeDisposeCallback(void Function() callback) {
+    _metaData.disposeCallbacks.remove(callback);
+  }
+
+  /// Calls all the dispose callbacks registered for this [WidgetRef],
+  /// and disposes the [local] store.
+  void dispose() {
+    _item.dispose();
+  }
+
+  // ------------------------- [Ref] API -------------------------
+
+  T run<T>(ItemFactory<T> itemFactory) {
+    return _store.run<T>(itemFactory);
+  }
+
+  T call<T>(ItemFactory<T> itemFactory, {Object? globalKey}) {
+    return _store.get<T>(itemFactory, globalKey: globalKey);
+  }
+
+  T get<T>(ItemFactory<T> itemFactory, {Object? globalKey}) {
+    return _store.get<T>(itemFactory, globalKey: globalKey);
+  }
+
+  T write<T>(ItemFactory<T> itemFactory, {Object? globalKey}) {
+    return _store.write<T>(itemFactory, globalKey: globalKey);
+  }
+
+  T? read<T>(ItemFactory<T> itemFactory) {
+    return _store.read<T>(itemFactory);
   }
 
   T? readByKey<T>(Object globalKey) => _store.readByKey<T>(globalKey);
@@ -58,17 +81,37 @@ class WidgetRef {
     Object? tag,
     bool disposable = false,
     void Function(T)? dispose,
-  }) =>
-      _store.writeValue<T>(value, disposable: disposable, dispose: dispose);
-
-  final _disposeCallbacks = <void Function()>[];
-  final _disposableObjects = <Object>[];
-
-  void onDispose(void Function() callback) {
-    if (_disposeCallbacks.contains(callback)) return;
-    _disposeCallbacks.add(callback);
+  }) {
+    return _store.writeValue<T>(
+      value,
+      tag: tag,
+      disposable: disposable,
+      dispose: dispose,
+    );
   }
 
+  void disposeValue<T>([Object? tag]) {
+    _store.disposeValue<T>(tag);
+  }
+
+  void overrideFactory<T>(ItemFactory<T> from, ItemFactory<T> to) {
+    _store.overrideFactory<T>(from, to);
+  }
+
+  void removeOverrideFrom(ItemFactory factory) {
+    _store.removeOverrideFrom(factory);
+  }
+
+  void disposeItem(Object globalKey) {
+    _store.disposeItem(globalKey);
+  }
+
+  void disposeItems(Iterable<Object> globalKeys) {
+    _store.disposeItems(globalKeys);
+  }
+}
+
+extension WidgetRefX on WidgetRef {
   /// Binds the provided [object] to the [onDispose] callback, allowing it to be
   /// disposed when the widget gets disposed.
   ///
@@ -80,38 +123,11 @@ class WidgetRef {
   /// It's safe to call this in a widget's build function, because it checks
   /// if [object] has already been registered for disposal.
   T disposable<T extends Object>(T object, [void Function(T)? dispose]) {
-    if (_disposableObjects.contains(object)) return object;
-    _disposableObjects.add(object);
-
-    bool disposing = false;
-
-    // dispose object when the widget is being disposed
-    onDispose(
-      () {
-        if (disposing) return;
-        disposing = true;
-
-        dispose == null ? (object as dynamic).dispose() : dispose(object);
-      },
-    );
-
-    return object;
+    return _metaData.safeAddDisposableObject(object, dispose);
   }
 
-  void removeDisposeCallback(void Function() callback) {
-    _disposeCallbacks.remove(callback);
-  }
-
-  void dispose() {
-    for (final callback in _disposeCallbacks) {
-      callback();
-    }
-  }
-}
-
-extension WidgetRefX on WidgetRef {
   void callOnce(Function() oneOffFun, {Object? tag}) {
-    local(((_) => oneOffFun()).p(), globalKey: (callOnce, tag));
+    local((_) => oneOffFun(), globalKey: (callOnce, tag));
   }
 }
 

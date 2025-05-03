@@ -216,18 +216,14 @@ class SimpleItemStore implements ItemStore {
   }
 
   @override
-  T? read<T>(ItemFactory<T> itemFactory) {
-    return readByKey<T>(itemFactory);
+  T? read<T>(ItemFactory<T> itemFactory, {Object? globalKey}) {
+    return readByKey<T>(ItemStore.globalKeyFrom(itemFactory, globalKey));
   }
 
   @override
   T get<T>(ItemFactory<T> itemFactory, {Object? globalKey}) {
-    return read<T>(itemFactory) ?? write<T>(itemFactory, globalKey: globalKey);
-  }
-
-  @override
-  void remove<T>(ItemFactory<T> itemFactory) {
-    disposeItem(itemFactory);
+    return read<T>(itemFactory, globalKey: globalKey) ??
+        write<T>(itemFactory, globalKey: globalKey);
   }
 
   @override
