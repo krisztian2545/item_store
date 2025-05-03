@@ -3,8 +3,6 @@ import 'package:item_store/src/item_factory.dart';
 import 'item.dart';
 import 'ref.dart';
 
-part 'get_global_key_ref.dart';
-
 typedef ItemCacheMap = Map<Object, Item>;
 
 typedef OverridesMap = Map<ItemFactory, ItemFactory>;
@@ -26,28 +24,19 @@ abstract interface class ItemStore {
   ///     [itemFactory].
   ///   - else [itemFactory] on it's own is used as the global key.
   /// {@endtemplate}
-  static Object globalKeyFrom<T>({
-    required Function itemFactory,
-    Object? args,
-  }) {
-    if (args == null) {
-      return itemFactory;
+  static Object globalKeyFrom<T>(
+    ItemFactory<T>? itemFactory,
+    Object? globalKey,
+  ) {
+    assert(
+      itemFactory != null || globalKey != null,
+      "You must provide one of either itemFactory or globalKey!",
+    );
+
+    if (globalKey != null) {
+      return globalKey;
     }
-    return (itemFactory, args);
-  }
-
-  static Object extractGlobalKeyFrom<T>(ItemFactory<T> itemFactory) {
-    final ref = _GetGlobalKeyRef();
-
-    // set args in ref
-    try {
-      // should throw OverriddenException
-      itemFactory(ref);
-    } on OverriddenException {
-      return ref.globalKey;
-    }
-
-    throw StateError("Failed to get global key.");
+    return itemFactory!;
   }
 
   /// Calculates the global key of a value.
@@ -83,8 +72,6 @@ abstract interface class ItemStore {
   /// [write]s an item or [read]s it if it's already cached.
   /// {@endtemplate}
   T get<T>(ItemFactory<T> itemFactory, {Object? globalKey});
-
-  void remove<T>(ItemFactory<T> itemFactory);
 
   /// Runs [itemFactory] the same way as [write] does, but doesn't store it into the cache.
   /// Useful to create functions that perform an action, rather then create data.
@@ -126,10 +113,10 @@ abstract interface class ItemStore {
   /// ```
   T? readValue<T>([Object? tag]);
 
-  void removeValue<T>([Object? tag]);
+  void disposeValue<T>([Object? tag]);
 
   /// Disposes the item and then removes it from the cache.
-  void removeItem(Object globalKey);
+  void disposeItem(Object globalKey);
 
   /// Overrides the [from] factory with the [to] factory. So when creating
   /// an item (whether trough [write] or [get]), the [to] factory will be
@@ -151,7 +138,7 @@ abstract interface class ItemStore {
   /// created with it.
   void removeOverrideFrom(ItemFactory factory);
 
-  void removeItems(Iterable<Object> globalKeys);
+  void disposeItems(Iterable<Object> globalKeys);
 
   /// Disposes items and clears cache.
   void dispose();
@@ -193,7 +180,7 @@ class SimpleItemStore implements ItemStore {
 
   /// Reads the cached value stored with [globalKey].
   /// You can calculate your global key with [ItemStore.globalKeyFrom],
-  /// [ItemStore.extractGlobalKeyFrom] or [ItemStore.valueKeyFrom].
+  /// or [ItemStore.valueKeyFrom].
   @override
   T? readByKey<T>(Object globalKey) {
     return (_cache[globalKey] as Item<T>?)?.data;
@@ -204,36 +191,23 @@ class SimpleItemStore implements ItemStore {
     final factoryOverride = _overrides[itemFactory];
     final isOverridden = factoryOverride != null;
 
-    final ref = Ref(
-      store: this,
-      globalKey: globalKey,
-      checkKeyInStore: false,
-      isOverridden: isOverridden,
-    );
+    final key = ItemStore.globalKeyFrom(itemFactory, globalKey);
+    final ref = Ref(store: this, globalKey: key);
 
     late final T result;
 
     if (isOverridden) {
-      // set args in ref
-      try {
-        // should throw OverriddenException
-        itemFactory(ref);
-      } on OverriddenException {
-        // TODO why did this pass tests when I didn't store it in result?
-        result = factoryOverride(ref);
-      }
+      result = factoryOverride(ref);
     } else {
       result = itemFactory(ref);
     }
-
-    final key = ref.globalKey;
 
     // schedule the disposal of the item's local store
     ref.onDispose(ref.local.dispose);
 
     // dispose old item stored with same key
     if (_cache.containsKey(key)) {
-      removeItem(key);
+      disposeItem(key);
     }
 
     _cache[key] = Item<T>(result, ref.itemMetaData);
@@ -243,65 +217,17 @@ class SimpleItemStore implements ItemStore {
 
   @override
   T? read<T>(ItemFactory<T> itemFactory) {
-    return readByKey(ItemStore.extractGlobalKeyFrom(itemFactory));
+    return readByKey<T>(itemFactory);
   }
 
   @override
   T get<T>(ItemFactory<T> itemFactory, {Object? globalKey}) {
-    final factoryOverride = _overrides[itemFactory];
-    final isOverridden = factoryOverride != null;
-
-    final ref = Ref(
-      store: this,
-      globalKey: globalKey,
-      checkKeyInStore: true,
-      isOverridden: isOverridden,
-    );
-
-    late final T result;
-    late final Object key;
-
-    if (isOverridden) {
-      // set args and globalKey in ref
-      try {
-        // should throw OverriddenException
-        itemFactory(ref);
-      } on OverriddenException {
-        key = ref.globalKey;
-
-        // return if there is already a value with this key
-        final alreadyPresentItem = readByKey<T>(key);
-        if (alreadyPresentItem != null) {
-          return alreadyPresentItem;
-        }
-
-        result = factoryOverride(ref);
-      }
-    } else {
-      try {
-        result = itemFactory(ref);
-        key = ref.globalKey;
-      } on RedundantKeyException catch (e) {
-        return e.readValue as T;
-      }
-    }
-
-    // schedule the disposal of the item's local store
-    ref.onDispose(ref.local.dispose);
-
-    // dispose old item stored with same key
-    if (_cache.containsKey(key)) {
-      removeItem(key);
-    }
-
-    _cache[key] = Item<T>(result, ref.itemMetaData);
-
-    return result;
+    return read<T>(itemFactory) ?? write<T>(itemFactory, globalKey: globalKey);
   }
 
   @override
   void remove<T>(ItemFactory<T> itemFactory) {
-    removeItem(ItemStore.extractGlobalKeyFrom(itemFactory));
+    disposeItem(itemFactory);
   }
 
   @override
@@ -326,14 +252,14 @@ class SimpleItemStore implements ItemStore {
           }
         }
         return value;
-      }.p(),
+      },
       globalKey: ItemStore.valueKeyFrom(T, tag: tag),
     );
   }
 
   @override
-  void removeValue<T>([Object? tag]) {
-    removeItem(ItemStore.valueKeyFrom(T, tag: tag));
+  void disposeValue<T>([Object? tag]) {
+    disposeItem(ItemStore.valueKeyFrom(T, tag: tag));
   }
 
   /// Overrides the [from] factory with the [to] factory. So when creating
@@ -367,23 +293,12 @@ class SimpleItemStore implements ItemStore {
     final factoryOverride = _overrides[itemFactory];
     final isOverridden = factoryOverride != null;
 
-    final ref = Ref(
-      store: this,
-      checkKeyInStore: false,
-      isOverridden: isOverridden,
-    );
+    final ref = Ref(store: this, globalKey: Object());
 
     late final T result;
 
     if (isOverridden) {
-      // set args in ref
-      try {
-        // should throw OverriddenException
-        itemFactory(ref);
-      } on OverriddenException {
-        // TODO why did this pass tests when I didn't store it in result?
-        result = factoryOverride(ref);
-      }
+      result = factoryOverride(ref);
     } else {
       result = itemFactory(ref);
     }
@@ -398,7 +313,7 @@ class SimpleItemStore implements ItemStore {
 
   /// Disposes the item and then removes it from the cache.
   @override
-  void removeItem(Object globalKey) {
+  void disposeItem(Object globalKey) {
     final item = _cache[globalKey];
     if (item == null) return;
 
@@ -407,10 +322,10 @@ class SimpleItemStore implements ItemStore {
     _cache.remove(globalKey);
   }
 
-  /// Calls [removeItem] for each key in [globalKeys].
+  /// Calls [disposeItem] for each key in [globalKeys].
   @override
-  void removeItems(Iterable<Object> globalKeys) {
-    globalKeys.forEach(removeItem);
+  void disposeItems(Iterable<Object> globalKeys) {
+    globalKeys.forEach(disposeItem);
   }
 
   @override
@@ -419,7 +334,9 @@ class SimpleItemStore implements ItemStore {
   /// Disposes items and clears cache.
   @override
   void dispose() {
-    removeItems([..._cache.keys]);
+    while (_cache.isNotEmpty) {
+      disposeItem(_cache.keys.last);
+    }
     _cache.clear();
   }
 }

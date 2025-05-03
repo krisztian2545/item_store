@@ -75,7 +75,7 @@ void main() {
         // store.writer((_, x) => x, globalKey: 'count')(5);
 
         store.write(itemFactory.p(), globalKey: key);
-        store.removeItem(key);
+        store.disposeItem(key);
 
         expect(disposed, true);
       });

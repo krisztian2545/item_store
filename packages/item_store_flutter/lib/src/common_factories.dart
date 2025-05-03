@@ -3,24 +3,29 @@ import 'package:item_store/item_store.dart';
 
 import 'widget_ref.dart';
 
-TextEditingController Function([
+TextEditingController _textControllerFactory([
   String? initialText,
   void Function(TextEditingController controller)? listener,
-]) _textControllerFactory(Ref ref) {
-  return ([
-    String? initialText,
-    void Function(TextEditingController controller)? listener,
-  ]) {
-    final controller = ref.disposable(TextEditingController(text: initialText));
-    if (listener != null) {
-      controller.addListener(() => listener(controller));
-    }
-    return controller;
-  };
+]) {
+  final controller = TextEditingController(text: initialText);
+  if (listener != null) {
+    controller.addListener(() => listener(controller));
+  }
+  return controller;
 }
 
-TextEditingController _textEditingController(Ref ref, int tag) {
-  return ref(_textControllerFactory.p());
+TextEditingController Function({
+  Object tag,
+  String? initialText,
+  void Function(TextEditingController controller)? listener,
+}) textEditingControllerContainer(Ref ref) {
+  return ({tag = 0, initialText, listener}) {
+    return ref.local<TextEditingController>(
+      globalKey: (TextEditingController, tag),
+      (localRef) =>
+          _textControllerFactory(initialText, listener)..disposeWith(localRef),
+    );
+  };
 }
 
 extension CommonFactoriesX on WidgetRef {
@@ -29,11 +34,10 @@ extension CommonFactoriesX on WidgetRef {
     String? initialText,
     void Function(TextEditingController controller)? listener,
   }) {
-    
-    return local.readValue<TextEditingController>(tag) ??
-        local.writeValue(
-          local(_textControllerFactory.p())(initialText, listener),
-          tag: tag,
-        );
+    return local(textEditingControllerContainer)(
+      tag: tag,
+      initialText: initialText,
+      listener: listener,
+    );
   }
 }

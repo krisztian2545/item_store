@@ -11,46 +11,29 @@ extension ItemStoreFlutterExtension on BuildContext {
 }
 
 extension ItemStoreFlutterShortcutsExtension on BuildContext {
-  T write<T>(
-    ItemFactory<T> itemFactory, {
-    Object? globalKey,
-    Object? tag,
-  }) {
-    return store.write<T>(
-      itemFactory,
-      globalKey: globalKey,
-      tag: tag,
-    );
+  T write<T>(ItemFactory<T> itemFactory, {Object? globalKey}) {
+    return store.write<T>(itemFactory, globalKey: globalKey);
   }
 
   T? readByKey<T>(Object globalKey) => store.readByKey<T>(globalKey);
 
-  T get<T>(
-    ItemFactory<T> itemFactory, {
-    Object? globalKey,
-    Object? tag,
-    List<Object>? dependencies,
-  }) =>
-      store.get<T>(
-        itemFactory,
-        globalKey: globalKey,
-        tag: tag,
-        dependencies: dependencies,
-      );
+  T get<T>(ItemFactory<T> itemFactory, {Object? globalKey}) {
+    return store.get<T>(itemFactory, globalKey: globalKey);
+  }
 
   T writeValue<T>(
     T value, {
     Object? tag,
     bool disposable = false,
     void Function(T)? dispose,
-  }) =>
-      store.writeValue<T>(
-        value,
-        tag: tag,
-        disposable: disposable,
-        dispose: dispose,
-      );
+  }) {
+    return store.writeValue<T>(
+      value,
+      tag: tag,
+      disposable: disposable,
+      dispose: dispose,
+    );
+  }
 
-  T? readValue<T>([Object? tag]) =>
-      store.readByKey<T>(ItemStore.valueKeyFrom(T, tag: tag));
+  T? readValue<T>([Object? tag]) => store.readValue<T>(tag);
 }
