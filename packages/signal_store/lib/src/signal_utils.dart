@@ -7,7 +7,7 @@ extension SignalUtilsX<T, S extends ReadonlySignal<T>> on S {
   void Function() sub() => subscribe((_) {});
 
   S subWith(Ref ref) {
-    final subs = ref.local(_signalSubs.p());
+    final subs = ref.local(_signalSubs);
     if (subs.contains(this)) return this;
     subs.add(this);
     final unsub = sub();
