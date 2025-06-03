@@ -1,5 +1,6 @@
 import 'package:item_store/src/item_factory.dart';
 import 'package:item_store/src/items_api.dart';
+import 'package:item_store/src/utils.dart';
 
 import 'item.dart';
 import 'ref.dart';
@@ -247,7 +248,7 @@ class SimpleItemStore implements ItemStore {
 }
 
 extension type CallableItemStore(ItemStore _store) implements ItemStore {
-  T call<T>(ItemFactory<T> itemFactory, {Object? globalKey}) {
-    return _store.get<T>(itemFactory, key: globalKey);
+  T call<T>(ItemFactory<T> itemFactory, {Object? key}) {
+    return _store.get<T>(itemFactory, key: key);
   }
 }
