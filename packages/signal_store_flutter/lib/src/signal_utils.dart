@@ -2,8 +2,8 @@ import 'package:signal_store_flutter/signal_store_flutter.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
 extension WidgetRefSignalUtilsExtensionX on WidgetRef {
-  Signal<T> signal<T>(Object globalKey) =>
-      this<Signal<T>>(((_) => lazySignal<T>()).p(), globalKey: globalKey);
+  Signal<T> signal<T>(Object key) =>
+      this<Signal<T>>((_) => lazySignal<T>(), globalKey: key);
 
   ReadonlySignal<T> subToSignal<T>(ReadonlySignal<T> signal) {
     callOnce(signal.sub, tag: (subToSignal, signal));

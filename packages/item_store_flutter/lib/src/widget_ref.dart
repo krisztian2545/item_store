@@ -56,23 +56,23 @@ class WidgetRef {
     return _store.run<T>(itemFactory);
   }
 
-  T call<T>(ItemFactory<T> itemFactory, {Object? globalKey}) {
-    return _store.get<T>(itemFactory, key: globalKey);
+  T call<T>(ItemFactory<T> itemFactory, {Object? key}) {
+    return _store.get<T>(itemFactory, key: key);
   }
 
-  T get<T>(ItemFactory<T> itemFactory, {Object? globalKey}) {
-    return _store.get<T>(itemFactory, key: globalKey);
+  T get<T>(ItemFactory<T> itemFactory, {Object? key}) {
+    return _store.get<T>(itemFactory, key: key);
   }
 
-  T write<T>(ItemFactory<T> itemFactory, {Object? globalKey}) {
-    return _store.write<T>(itemFactory, key: globalKey);
+  T write<T>(ItemFactory<T> itemFactory, {Object? key}) {
+    return _store.write<T>(itemFactory, key: key);
   }
 
-  T? read<T>(ItemFactory<T> itemFactory) {
-    return _store.read<T>(itemFactory);
+  T? read<T>(ItemFactory<T> itemFactory, {Object? key}) {
+    return _store.read<T>(itemFactory, key: key);
   }
 
-  T? readByKey<T>(Object globalKey) => _store.readByKey<T>(globalKey);
+  T? readByKey<T>(Object key) => _store.readByKey<T>(key);
 
   T? readValue<T>([Object? tag]) => _store.readValue<T>(tag);
 
@@ -102,12 +102,12 @@ class WidgetRef {
     _store.removeOverrideFrom(factory);
   }
 
-  void disposeItem(Object globalKey) {
-    _store.disposeItem(globalKey);
+  void disposeItem(Object key) {
+    _store.disposeItem(key);
   }
 
-  void disposeItems(Iterable<Object> globalKeys) {
-    _store.disposeItems(globalKeys);
+  void disposeItems(Iterable<Object> keys) {
+    _store.disposeItems(keys);
   }
 }
 
@@ -127,7 +127,7 @@ extension WidgetRefX on WidgetRef {
   }
 
   void callOnce(Function() oneOffFun, {Object? tag}) {
-    local((_) => oneOffFun(), globalKey: (callOnce, tag));
+    local((_) => oneOffFun(), key: (callOnce, tag));
   }
 }
 

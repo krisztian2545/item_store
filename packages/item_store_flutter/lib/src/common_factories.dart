@@ -21,7 +21,7 @@ TextEditingController Function({
 }) textEditingControllerContainer(Ref ref) {
   return ({tag = 0, initialText, listener}) {
     return ref.local<TextEditingController>(
-      globalKey: (TextEditingController, tag),
+      key: (TextEditingController, tag),
       (localRef) =>
           _textControllerFactory(initialText, listener)..disposeWith(localRef),
     );

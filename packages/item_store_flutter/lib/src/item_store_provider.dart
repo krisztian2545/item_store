@@ -11,8 +11,6 @@ abstract class ItemStoreProviderDisposeBehavior {
 }
 
 class ItemStoreDisposeBehavior extends ItemStoreProviderDisposeBehavior {
-  const ItemStoreDisposeBehavior._(this.callback);
-
   const ItemStoreDisposeBehavior.from(this.callback);
 
   final void Function(ItemStoreProvider widget, ItemStore store) callback;
