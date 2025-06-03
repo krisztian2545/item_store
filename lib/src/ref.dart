@@ -1,6 +1,7 @@
 import 'package:item_store/item_store.dart';
+import 'package:item_store/src/items_api.dart';
 
-class Ref {
+class Ref with ProxyItemsApi {
   /// Creates Ref without having to initialize the globalKey, tag and args
   /// in the constructor.
   /// You must call [init] later, before passing it to the actual item factory!
@@ -53,61 +54,8 @@ class Ref {
 
   // ------------------------- [ItemStore] proxy API -------------------------
 
-  T? readByKey<T>(Object globalKey) => _store.readByKey<T>(globalKey);
-
-  T write<T>(ItemFactory<T> itemFactory, {Object? globalKey}) {
-    return _store.write<T>(itemFactory, key: globalKey);
-  }
-
-  T? read<T>(ItemFactory<T> itemFactory) => _store.read<T>(itemFactory);
-
-  T call<T>(ItemFactory<T> itemFactory, {Object? globalKey}) {
-    return _store.get<T>(itemFactory, key: globalKey);
-  }
-
-  T get<T>(ItemFactory<T> itemFactory, {Object? globalKey}) {
-    return _store.get<T>(itemFactory, key: globalKey);
-  }
-
-  T run<T>(ItemFactory<T> itemFactory) {
-    return _store.run<T>(itemFactory);
-  }
-
-  T writeValue<T>(
-    T value, {
-    Object? tag,
-    bool disposable = false,
-    void Function(T)? dispose,
-  }) {
-    return _store.writeValue<T>(
-      value,
-      tag: tag,
-      disposable: disposable,
-      dispose: dispose,
-    );
-  }
-
-  T? readValue<T>([Object? tag]) => _store.readValue<T>(tag);
-
-  void disposeValue<T>([Object? tag]) {
-    _store.disposeValue<T>(tag);
-  }
-
-  void overrideFactory<T>(ItemFactory<T> from, ItemFactory<T> to) {
-    _store.overrideFactory<T>(from, to);
-  }
-
-  void removeOverrideFrom(ItemFactory factory) {
-    _store.removeOverrideFrom(factory);
-  }
-
-  void disposeItem(Object globalKey) {
-    _store.disposeItem(globalKey);
-  }
-
-  void disposeItems(Iterable<Object> globalKeys) {
-    _store.disposeItems(globalKeys);
-  }
+  @override
+  ItemStore get proxyStory => _store;
 }
 
 extension RefUtilsX on Ref {
