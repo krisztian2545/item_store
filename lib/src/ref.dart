@@ -56,17 +56,17 @@ class Ref {
   T? readByKey<T>(Object globalKey) => _store.readByKey<T>(globalKey);
 
   T write<T>(ItemFactory<T> itemFactory, {Object? globalKey}) {
-    return _store.write<T>(itemFactory, globalKey: globalKey);
+    return _store.write<T>(itemFactory, key: globalKey);
   }
 
   T? read<T>(ItemFactory<T> itemFactory) => _store.read<T>(itemFactory);
 
   T call<T>(ItemFactory<T> itemFactory, {Object? globalKey}) {
-    return _store.get<T>(itemFactory, globalKey: globalKey);
+    return _store.get<T>(itemFactory, key: globalKey);
   }
 
   T get<T>(ItemFactory<T> itemFactory, {Object? globalKey}) {
-    return _store.get<T>(itemFactory, globalKey: globalKey);
+    return _store.get<T>(itemFactory, key: globalKey);
   }
 
   T run<T>(ItemFactory<T> itemFactory) {

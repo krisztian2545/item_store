@@ -24,17 +24,17 @@ abstract interface class ItemStore {
   ///     [itemFactory].
   ///   - else [itemFactory] on it's own is used as the global key.
   /// {@endtemplate}
-  static Object globalKeyFrom<T>(
+  static Object keyFrom<T>(
     ItemFactory<T>? itemFactory,
-    Object? globalKey,
+    Object? key,
   ) {
     assert(
-      itemFactory != null || globalKey != null,
+      itemFactory != null || key != null,
       "You must provide one of either itemFactory or globalKey!",
     );
 
-    if (globalKey != null) {
-      return globalKey;
+    if (key != null) {
+      return key;
     }
     return itemFactory!;
   }
@@ -49,10 +49,12 @@ abstract interface class ItemStore {
 
   OverridesMap get overrides;
 
-  /// Reads the cached value stored with [globalKey].
-  /// You can calculate your global key with [ItemStore.globalKeyFrom],
+  /// Reads the cached value stored with [key].
+  /// You can calculate your global key with [ItemStore.keyFrom],
   /// [ItemStore.extractGlobalKeyFrom] or [ItemStore.valueKeyFrom].
-  T? readByKey<T>(Object globalKey);
+  T? readByKey<T>(Object key);
+
+  T? read<T>(ItemFactory<T> itemFactory, {Object? key});
 
   /// {@template create}
   /// Creates an object by calling [itemFactory] and writes it into the cache
@@ -62,16 +64,12 @@ abstract interface class ItemStore {
   ///
   /// {@macro global_key_from}
   /// {@endtemplate}
-  T write<T>(ItemFactory<T> itemFactory, {Object? globalKey});
-
-  /// Reads the cached value stored with a key calculated with [globalKeyFrom],
-  /// where the args are determined inside the itemFactory's [p] function.
-  T? read<T>(ItemFactory<T> itemFactory);
+  T write<T>(ItemFactory<T> itemFactory, {Object? key});
 
   /// {@template get}
   /// [write]s an item or [read]s it if it's already cached.
   /// {@endtemplate}
-  T get<T>(ItemFactory<T> itemFactory, {Object? globalKey});
+  T get<T>(ItemFactory<T> itemFactory, {Object? key});
 
   /// Runs [itemFactory] the same way as [write] does, but doesn't store it into the cache.
   /// Useful to create functions that perform an action, rather then create data.
@@ -116,7 +114,7 @@ abstract interface class ItemStore {
   void disposeValue<T>([Object? tag]);
 
   /// Disposes the item and then removes it from the cache.
-  void disposeItem(Object globalKey);
+  void disposeItem(Object key);
 
   /// Overrides the [from] factory with the [to] factory. So when creating
   /// an item (whether trough [write] or [get]), the [to] factory will be
@@ -138,7 +136,7 @@ abstract interface class ItemStore {
   /// created with it.
   void removeOverrideFrom(ItemFactory factory);
 
-  void disposeItems(Iterable<Object> globalKeys);
+  void disposeItems(Iterable<Object> keys);
 
   /// Disposes items and clears cache.
   void dispose();
@@ -178,21 +176,21 @@ class SimpleItemStore implements ItemStore {
   @override
   OverridesMap get overrides => _overrides;
 
-  /// Reads the cached value stored with [globalKey].
-  /// You can calculate your global key with [ItemStore.globalKeyFrom],
+  /// Reads the cached value stored with [key].
+  /// You can calculate your global key with [ItemStore.keyFrom],
   /// or [ItemStore.valueKeyFrom].
   @override
-  T? readByKey<T>(Object globalKey) {
-    return (_cache[globalKey] as Item<T>?)?.data;
+  T? readByKey<T>(Object key) {
+    return (_cache[key] as Item<T>?)?.data;
   }
 
   @override
-  T write<T>(ItemFactory<T> itemFactory, {Object? globalKey}) {
+  T write<T>(ItemFactory<T> itemFactory, {Object? key}) {
     final factoryOverride = _overrides[itemFactory];
     final isOverridden = factoryOverride != null;
 
-    final key = ItemStore.globalKeyFrom(itemFactory, globalKey);
-    final ref = Ref(store: this, globalKey: key);
+    final actualKey = ItemStore.keyFrom(itemFactory, key);
+    final ref = Ref(store: this, globalKey: actualKey);
 
     late final T result;
 
@@ -206,24 +204,23 @@ class SimpleItemStore implements ItemStore {
     ref.onDispose(ref.local.dispose);
 
     // dispose old item stored with same key
-    if (_cache.containsKey(key)) {
-      disposeItem(key);
+    if (_cache.containsKey(actualKey)) {
+      disposeItem(actualKey);
     }
 
-    _cache[key] = Item<T>(result, ref.itemMetaData);
+    _cache[actualKey] = Item<T>(result, ref.itemMetaData);
 
     return result;
   }
 
   @override
-  T? read<T>(ItemFactory<T> itemFactory, {Object? globalKey}) {
-    return readByKey<T>(ItemStore.globalKeyFrom(itemFactory, globalKey));
+  T? read<T>(ItemFactory<T> itemFactory, {Object? key}) {
+    return readByKey<T>(ItemStore.keyFrom(itemFactory, key));
   }
 
   @override
-  T get<T>(ItemFactory<T> itemFactory, {Object? globalKey}) {
-    return read<T>(itemFactory, globalKey: globalKey) ??
-        write<T>(itemFactory, globalKey: globalKey);
+  T get<T>(ItemFactory<T> itemFactory, {Object? key}) {
+    return read<T>(itemFactory, key: key) ?? write<T>(itemFactory, key: key);
   }
 
   @override
@@ -249,7 +246,7 @@ class SimpleItemStore implements ItemStore {
         }
         return value;
       },
-      globalKey: ItemStore.valueKeyFrom(T, tag: tag),
+      key: ItemStore.valueKeyFrom(T, tag: tag),
     );
   }
 
@@ -339,6 +336,6 @@ class SimpleItemStore implements ItemStore {
 
 extension type CallableItemStore(ItemStore _store) implements ItemStore {
   T call<T>(ItemFactory<T> itemFactory, {Object? globalKey}) {
-    return _store.get<T>(itemFactory, globalKey: globalKey);
+    return _store.get<T>(itemFactory, key: globalKey);
   }
 }

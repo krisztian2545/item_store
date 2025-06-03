@@ -28,7 +28,7 @@ void main() {
 
     test('write with global key', () {
       final (store, key, itemFactory) = initialVariables();
-      final item = store.write(itemFactory, globalKey: key);
+      final item = store.write(itemFactory, key: key);
       expect(item, 42);
     });
 
@@ -40,7 +40,7 @@ void main() {
 
     test('readByKey', () {
       final (store, key, itemFactory) = initialVariables();
-      store.write(itemFactory, globalKey: key);
+      store.write(itemFactory, key: key);
       expect(store.readByKey(key), 42);
     });
 
@@ -48,8 +48,8 @@ void main() {
       final (store, key, itemFactory) = initialVariables();
       int otherFactory(Ref _) => 0;
 
-      expect(store.get<int>(itemFactory, globalKey: key), 42);
-      expect(store.get<int>(otherFactory, globalKey: key), 42);
+      expect(store.get<int>(itemFactory, key: key), 42);
+      expect(store.get<int>(otherFactory, key: key), 42);
     });
 
     group('Ref', () {
@@ -74,7 +74,7 @@ void main() {
         // final (getCount, incCount) = store.writer(counter)();
         // store.writer((_, x) => x, globalKey: 'count')(5);
 
-        store.write(itemFactory, globalKey: key);
+        store.write(itemFactory, key: key);
         store.disposeItem(key);
 
         expect(disposed, true);
@@ -88,8 +88,8 @@ void main() {
         final (store, key) = initStoreAndTypeKey();
         final Type otherKey = OtherCustomKey;
 
-        final item = store.write(((_) => 42), globalKey: key);
-        final otherItem = store.write(((_) => 'other'), globalKey: otherKey);
+        final item = store.write(((_) => 42), key: key);
+        final otherItem = store.write(((_) => 'other'), key: otherKey);
 
         expect(item, 42);
         expect(otherItem, 'other');
@@ -99,8 +99,8 @@ void main() {
         final (store, key) = initStoreAndTypeKey();
         final Type otherKey = OtherCustomKey;
 
-        store.write(((_) => 42), globalKey: key);
-        store.write(((_) => 'other'), globalKey: otherKey);
+        store.write(((_) => 42), key: key);
+        store.write(((_) => 'other'), key: otherKey);
 
         expect(store.readByKey(key), 42);
         expect(store.readByKey(otherKey), 'other');
@@ -110,8 +110,8 @@ void main() {
         final (store, key) = initStoreAndTypeKey();
         final Type otherKey = OtherCustomKey;
 
-        expect(store.get(((_) => 42), globalKey: key), 42);
-        expect(store.get(((_) => 'other'), globalKey: otherKey), 'other');
+        expect(store.get(((_) => 42), key: key), 42);
+        expect(store.get(((_) => 'other'), key: otherKey), 'other');
       });
     });
 
