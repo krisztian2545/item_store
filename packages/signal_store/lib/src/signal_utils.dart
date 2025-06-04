@@ -58,13 +58,17 @@ extension SharedSignalContainerExtension<T, Arg,
       };
     }
 
-    map.forEach(update);
+    batch(() {
+      map.forEach(update);
+    });
   }
 
   void disposeValues() {
-    for (final signal in store.values) {
-      signal.dispose();
-    }
+    batch(() {
+      for (final signal in store.values) {
+        signal.dispose();
+      }
+    });
     store.clear();
   }
 }
