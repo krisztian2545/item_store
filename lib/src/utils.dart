@@ -168,7 +168,7 @@ extension ItemsApiUtilsExtension on ItemsApi {
     );
   }
 
-  /// Warning: local store gets disposed before you can even call the returned funcion
+  /// Warning: local store won't be disposed automatically after you call the returned funcion!
   T Function(A) runpf<T, A>(T Function(Ref, A) parameterizedFactory) {
     return run<T Function(A)>(
       (ref) => (A param) => parameterizedFactory(ref, param),

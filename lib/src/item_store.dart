@@ -68,13 +68,13 @@ class SimpleItemStore implements ItemStore {
 
   void _initOverrides(OverridesList? overrides) {
     if (overrides?.isNotEmpty ?? false) {
-      _overrides.addEntries(overrides!.map((e) {
-        assert(
-          e.$1.runtimeType == e.$2.runtimeType,
-          ItemStore._assertFactoryOverrideReturnTypeMessage,
-        );
-        return MapEntry(e.$1, e.$2);
-      }));
+      this.overrides.addEntries(overrides!.map((e) {
+            assert(
+              e.$1.runtimeType == e.$2.runtimeType,
+              ItemStore._assertFactoryOverrideReturnTypeMessage,
+            );
+            return MapEntry(e.$1, e.$2);
+          }));
     }
   }
 
@@ -84,10 +84,8 @@ class SimpleItemStore implements ItemStore {
   @override
   ItemCacheMap get cache => _cache;
 
-  final OverridesMap _overrides = {};
-
   @override
-  OverridesMap get overrides => _overrides;
+  final OverridesMap overrides = {};
 
   /// Reads the cached value stored with [key].
   /// You can calculate your global key with [ItemStore.keyFrom],
@@ -99,7 +97,7 @@ class SimpleItemStore implements ItemStore {
 
   @override
   T write<T>(ItemFactory<T> itemFactory, {Object? key}) {
-    final factoryOverride = _overrides[itemFactory];
+    final factoryOverride = overrides[itemFactory];
     final isOverridden = factoryOverride != null;
 
     final actualKey = ItemStore.keyFrom(itemFactory, key);
@@ -186,17 +184,17 @@ class SimpleItemStore implements ItemStore {
       from.runtimeType == to.runtimeType,
       ItemStore._assertFactoryOverrideReturnTypeMessage,
     );
-    _overrides[from] = to;
+    overrides[from] = to;
   }
 
   @override
   void removeOverrideFrom(ItemFactory factory) {
-    _overrides.remove(factory);
+    overrides.remove(factory);
   }
 
   @override
   T run<T>(ItemFactory<T> itemFactory) {
-    final factoryOverride = _overrides[itemFactory];
+    final factoryOverride = overrides[itemFactory];
     final isOverridden = factoryOverride != null;
 
     final ref = Ref(store: this, globalKey: Object());
@@ -237,13 +235,14 @@ class SimpleItemStore implements ItemStore {
   @override
   bool get isEmpty => _cache.isEmpty;
 
-  /// Disposes items and clears cache.
+  /// Disposes items, clears cache and overrides.
   @override
   void dispose() {
     while (_cache.isNotEmpty) {
       disposeItem(_cache.keys.last);
     }
     _cache.clear();
+    overrides.clear();
   }
 }
 
