@@ -80,7 +80,7 @@ class ItemMetaData {
     _disposableObjects[object] = actualDisposeCallback;
 
     // dispose object when the item is being removed from the store
-    disposeCallbacks.add(actualDisposeCallback);
+    _disposeCallbacks.add(actualDisposeCallback);
 
     return object;
   }
@@ -116,7 +116,7 @@ class ItemMetaData {
     _disposableObjects[object] = actualDisposeCallback;
 
     // dispose object when the item is being removed from the store
-    disposeCallbacks.add(actualDisposeCallback);
+    _disposeCallbacks.add(actualDisposeCallback);
 
     void safeDisposeSelf() {
       if (disposing) return;
