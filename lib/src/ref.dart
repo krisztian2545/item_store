@@ -6,7 +6,7 @@ class Ref with ProxyItemsApi {
   /// You must call [init] later, before passing it to the actual item factory!
   Ref({
     required ItemStore store,
-    required this.globalKey,
+    required this.key,
     CallableItemStore? localStore,
   })  : _store = store,
         _local = localStore,
@@ -32,10 +32,10 @@ class Ref with ProxyItemsApi {
 
   final ItemMetaData itemMetaData;
 
-  final Object globalKey;
+  final Object key;
 
   void disposeSelf() {
-    _store.disposeItem(globalKey);
+    _store.disposeItem(key);
   }
 
   /// Adds [callback] to the list of dispose callbacks, if not already added.

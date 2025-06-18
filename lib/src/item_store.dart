@@ -101,7 +101,7 @@ class SimpleItemStore implements ItemStore {
     final isOverridden = factoryOverride != null;
 
     final actualKey = ItemStore.keyFrom(itemFactory, key);
-    final ref = Ref(store: this, globalKey: actualKey);
+    final ref = Ref(store: this, key: actualKey);
 
     late final T result;
 
@@ -197,7 +197,8 @@ class SimpleItemStore implements ItemStore {
     final factoryOverride = overrides[itemFactory];
     final isOverridden = factoryOverride != null;
 
-    final ref = Ref(store: this, globalKey: Object());
+    // TODO unsupport ref.key
+    final ref = Ref(store: this, key: Object());
 
     late final T result;
 
