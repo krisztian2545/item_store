@@ -1,5 +1,4 @@
 import 'package:item_store/item_store.dart';
-import 'package:item_store/src/items_api.dart';
 
 class Ref with ProxyItemsApi {
   /// Creates Ref without having to initialize the globalKey, tag and args
@@ -24,13 +23,9 @@ class Ref with ProxyItemsApi {
   /// boilerplate.
   CallableItemStore get local => _lazyLocal();
 
-  void _initLocal() {
-    _local ??= CallableItemStore(SimpleItemStore());
-  }
-
   CallableItemStore _getLocal() => _local!;
   late CallableItemStore Function() _lazyLocal = () {
-    _initLocal();
+    _local ??= CallableItemStore(SimpleItemStore());
     _lazyLocal = _getLocal;
     return _local!;
   };
@@ -45,11 +40,15 @@ class Ref with ProxyItemsApi {
 
   /// Adds [callback] to the list of dispose callbacks, if not already added.
   void onDispose(ItemDisposeCallback callback) {
-    itemMetaData.safeAddDisposeCallback(callback);
+    itemMetaData.addDisposeCallback(callback);
   }
 
   void removeDisposeCallback(ItemDisposeCallback callback) {
-    itemMetaData.disposeCallbacks.remove(callback);
+    itemMetaData.removeDisposeCallback(callback);
+  }
+
+  void removeDisposableObject(Object object) {
+    itemMetaData.removeDisposableObject(object);
   }
 
   // ------------------------- [ItemStore] proxy API -------------------------

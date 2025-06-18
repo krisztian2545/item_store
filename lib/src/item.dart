@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 typedef ItemDisposeCallback = void Function();
 
 class Item<T> {
@@ -7,69 +9,114 @@ class Item<T> {
   final ItemMetaData metaData;
 
   void dispose() {
-    for (final callback in metaData.disposeCallbacks) {
-      callback();
-    }
+    metaData._dispose();
   }
 }
+
+typedef DisposableObjectRecord<T extends Object> = (T, void Function(T));
 
 class ItemMetaData {
   ItemMetaData({
     List<ItemDisposeCallback>? disposeCallbacks,
-    List<Object>? disposableObjects,
-  })  : disposeCallbacks = disposeCallbacks ?? [],
-        disposableObjects = disposableObjects ?? [];
-
-  final List<ItemDisposeCallback> disposeCallbacks;
-
-  /// A list of objects that are registered for disposal in [disposeCallbacks].
-  final List<Object> disposableObjects;
-
-  void safeAddDisposeCallback(ItemDisposeCallback callback) {
-    if (disposeCallbacks.contains(callback)) return;
-    disposeCallbacks.add(callback);
+    List<DisposableObjectRecord>? disposableObjects,
+  })  : _disposeCallbacks = [],
+        _disposableObjects = {},
+        _disposed = false {
+    if (disposableObjects != null) {
+      for (final args in disposableObjects) {
+        addDisposableObject(args.$1, args.$2);
+      }
+    }
+    if (disposeCallbacks != null) {
+      for (final callback in disposeCallbacks) {
+        addDisposeCallback(callback);
+      }
+    }
   }
 
-  T safeAddDisposableObject<T extends Object>(
+  final List<ItemDisposeCallback> _disposeCallbacks;
+  UnmodifiableListView<ItemDisposeCallback> get disposeCallbacks =>
+      UnmodifiableListView(_disposeCallbacks);
+
+  /// A list of objects that are registered for disposal in [disposeCallbacks].
+  final Map<Object, ItemDisposeCallback> _disposableObjects;
+  UnmodifiableListView<Object> get disposableObjects =>
+      UnmodifiableListView(_disposableObjects.keys);
+
+  bool _disposed;
+  bool get disposed => _disposed;
+
+  // ------------------ Dispose Callback -----------------
+
+  void addDisposeCallback(ItemDisposeCallback callback) {
+    assert(!_disposed);
+    if (_disposed || _disposeCallbacks.contains(callback)) return;
+    _disposeCallbacks.add(callback);
+  }
+
+  void removeDisposeCallback(ItemDisposeCallback callback) {
+    assert(!_disposed);
+    if (_disposed) return;
+    _disposeCallbacks.remove(callback);
+  }
+
+  // ------------------ Disposable Object -----------------
+
+  T addDisposableObject<T extends Object>(
     T object, [
     void Function(T)? dispose,
   ]) {
-    if (disposableObjects.contains(object)) return object;
-    disposableObjects.add(object);
+    assert(!_disposed);
+    if (_disposed || _disposableObjects.keys.contains(object)) return object;
 
     bool disposing = false;
+    void actualDisposeCallback() {
+      if (disposing) return;
+      disposing = true;
+
+      dispose == null ? (object as dynamic).dispose() : dispose(object);
+    }
+
+    _disposableObjects[object] = actualDisposeCallback;
 
     // dispose object when the item is being removed from the store
-    disposeCallbacks.add(
-      () {
-        if (disposing) return;
-        disposing = true;
-
-        dispose == null ? (object as dynamic).dispose() : dispose(object);
-      },
-    );
+    disposeCallbacks.add(actualDisposeCallback);
 
     return object;
   }
 
-  T safeBindTo<T extends Object>(
+  void removeDisposableObject<T extends Object>(T object) {
+    assert(!_disposed);
+    if (_disposed) return;
+    final removeCallback = _disposableObjects.remove(object);
+    if (removeCallback != null) {
+      removeDisposeCallback(removeCallback);
+    }
+  }
+
+  // ------------------ Two-way Dispose Binding -----------------
+
+  T bindTo<T extends Object>(
     T object, {
     void Function(T)? dispose,
     void Function(void Function() disposeItemFromStore)? onObjectDispose,
     required void Function() disposeFromStore,
   }) {
-    if (disposableObjects.contains(object)) return object;
-    disposableObjects.add(object);
+    assert(!_disposed);
+    if (_disposed || _disposableObjects.keys.contains(object)) return object;
 
     bool disposing = false;
-
-    // dispose object when the item is being removed from the store
-    disposeCallbacks.add(() {
+    void actualDisposeCallback() {
       if (disposing) return;
       disposing = true;
 
       dispose == null ? (object as dynamic).dispose() : dispose(object);
-    });
+    }
+
+    _disposableObjects[object] = actualDisposeCallback;
+
+    // dispose object when the item is being removed from the store
+    disposeCallbacks.add(actualDisposeCallback);
 
     void safeDisposeSelf() {
       if (disposing) return;
@@ -85,5 +132,18 @@ class ItemMetaData {
     }
 
     return object;
+  }
+
+  // --------------------------------------------------------------
+
+  void _dispose() {
+    assert(!_disposed);
+    if (_disposed) return;
+    _disposed = true;
+    for (final callback in _disposeCallbacks) {
+      callback();
+    }
+    _disposeCallbacks.clear();
+    _disposableObjects.clear();
   }
 }

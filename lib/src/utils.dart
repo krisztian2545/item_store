@@ -23,6 +23,8 @@ extension ObjectUtilsForRefX<T extends Object> on T {
   }
 }
 
+typedef GetSet<T> = (T Function(), void Function(T));
+
 extension RefUtilsExtension on Ref {
   /// Binds the provided [object] to the [onDispose] callback, allowing it to be
   /// disposed when the item gets disposed.
@@ -32,7 +34,7 @@ extension RefUtilsExtension on Ref {
   ///
   /// Returns the provided [object].
   T disposable<T extends Object>(T object, [void Function(T)? dispose]) {
-    return itemMetaData.safeAddDisposableObject<T>(object, dispose);
+    return itemMetaData.addDisposableObject<T>(object, dispose);
   }
 
   /// Bind the given [object] object to this ref, meaning if any of them gets disposed,
@@ -50,7 +52,7 @@ extension RefUtilsExtension on Ref {
     void Function(T)? dispose,
     void Function(void Function())? onObjectDispose,
   }) {
-    return itemMetaData.safeBindTo<T>(
+    return itemMetaData.bindTo<T>(
       object,
       dispose: dispose,
       onObjectDispose: onObjectDispose,
@@ -66,7 +68,7 @@ extension RefUtilsExtension on Ref {
   }
 
   T memo<T>(T Function() factory, Set dependencies, {Object? tag}) {
-    final (getMem, setMem) = data<(T, Set)?>(null, tag: tag);
+    final (getMem, setMem) = data<(T, Set)?>(null, tag: (memo, tag));
 
     T update() {
       final value = factory();
@@ -87,7 +89,7 @@ extension RefUtilsExtension on Ref {
     return oldValue;
   }
 
-  (T Function(), void Function(T)) data<T>(T initialValue, {Object? tag}) {
+  GetSet<T> data<T>(T initialValue, {Object? tag}) {
     return local(key: (data, tag), (_) {
       T value = initialValue;
       return (() => value, (newValue) => value = newValue);
@@ -96,21 +98,103 @@ extension RefUtilsExtension on Ref {
 }
 
 extension ItemsApiUtilsExtension on ItemsApi {
-  T tagged<T>(ItemFactory<T> itemFactory, Object? tag) {
+  // --------------------------------- Tagged ---------------------------------
+
+  T writet<T>(ItemFactory<T> itemFactory, Object? tag) {
+    return write<T>(itemFactory, key: (itemFactory, tag));
+  }
+
+  T? readt<T>(ItemFactory<T> itemFactory, Object? tag) {
+    return readByKey<T?>((itemFactory, tag));
+  }
+
+  T gett<T>(ItemFactory<T> itemFactory, Object? tag) {
     return get<T>(itemFactory, key: (itemFactory, tag));
   }
 
-  T Function(A) paramf<T, A>(T Function(Ref, A) parameterizedFactory) {
-    return get<T Function(A)>(
+  // -------------------------------- Parameterized ---------------------------------
+
+  T writep<T, A>(T Function(Ref, A) parameterizedFactory, A param) {
+    return write<T>(
       key: parameterizedFactory,
-      (ref) => (param) => parameterizedFactory(ref, param),
+      (ref) => parameterizedFactory(ref, param),
     );
   }
 
-  T pnt<T, A>(T Function(Ref, A) parameterizedFactory, A param) {
+  T getp<T, A>(T Function(Ref, A) parameterizedFactory, A param) {
+    return get<T>(
+      key: parameterizedFactory,
+      (ref) => parameterizedFactory(ref, param),
+    );
+  }
+
+  T runp<T, A>(T Function(Ref, A) parameterizedFactory, A param) {
+    return run((ref) => parameterizedFactory(ref, param));
+  }
+
+  // ------------------------ Parameterized & Tagged --------------------------
+
+  T writept<T, A>(T Function(Ref, A) parameterizedFactory, A param) {
+    return write<T>(
+      key: (parameterizedFactory, param),
+      (ref) => parameterizedFactory(ref, param),
+    );
+  }
+
+  T getpt<T, A>(T Function(Ref, A) parameterizedFactory, A param) {
     return get<T>(
       key: (parameterizedFactory, param),
       (ref) => parameterizedFactory(ref, param),
     );
+  }
+
+  // ------------------------- Parameterized Factory --------------------------
+
+  T Function(A) writepf<T, A>(T Function(Ref, A) parameterizedFactory) {
+    return write<T Function(A)>(
+      key: parameterizedFactory,
+      (ref) => (A param) => parameterizedFactory(ref, param),
+    );
+  }
+
+  T Function(A)? readpf<T, A>(T Function(Ref, A) parameterizedFactory) {
+    return readByKey<T Function(A)?>(parameterizedFactory);
+  }
+
+  T Function(A) getpf<T, A>(T Function(Ref, A) parameterizedFactory) {
+    return write<T Function(A)>(
+      key: parameterizedFactory,
+      (ref) => (A param) => parameterizedFactory(ref, param),
+    );
+  }
+
+  /// Warning: local store gets disposed before you can even call the returned funcion
+  T Function(A) runpf<T, A>(T Function(Ref, A) parameterizedFactory) {
+    return run<T Function(A)>(
+      (ref) => (A param) => parameterizedFactory(ref, param),
+    );
+  }
+
+  // --------------------------------- Other ----------------------------------
+
+  GetSet<List?> _dependenciesOf(
+    Ref ref,
+    Object key,
+  ) {
+    return ref.local(
+      key: key,
+      (Ref localRef) => localRef.data<List?>(null),
+    );
+  }
+
+  T memoItem<T>(ItemFactory<T> itemFactory, List dependencies) {
+    final (getDeps, setDeps) = getpf(_dependenciesOf)(itemFactory);
+
+    if (getDeps() != dependencies) {
+      setDeps(dependencies);
+      return write(itemFactory);
+    }
+
+    return readByKey(itemFactory);
   }
 }
