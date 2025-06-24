@@ -67,8 +67,8 @@ extension RefUtilsExtension on Ref {
     local((_) => oneOffFun(), key: (callOnce, tag));
   }
 
-  T memo<T>(T Function() factory, Set dependencies, {Object? tag}) {
-    final (getMem, setMem) = data<(T, Set)?>(null, tag: (memo, tag));
+  T memo<T>(T Function() factory, List dependencies, {Object? tag}) {
+    final (getMem, setMem) = data<(T, List)?>(null, tag: (memo, tag));
 
     T update() {
       final value = factory();
