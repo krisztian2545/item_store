@@ -1,17 +1,25 @@
 import 'package:item_store/item_store.dart';
 import 'package:signals_core/signals_core.dart';
 
-List<ReadonlySignal> _signalSubs(Ref ref) => [];
+Map<ReadonlySignal, void Function()> _signalSubs(Ref ref) {
+  // subscribed signals and subscribe cleanups
+  final subs = <ReadonlySignal, void Function()>{};
+  ref.onDispose(() {
+    for (final unsub in subs.values) {
+      unsub();
+    }
+  });
+  return subs;
+}
 
 extension SignalUtilsX<T, S extends ReadonlySignal<T>> on S {
   void Function() sub() => subscribe((_) {});
 
   S subWith(Ref ref) {
     final subs = ref.local(_signalSubs);
-    if (subs.contains(this)) return this;
-    subs.add(this);
-    final unsub = sub();
-    ref.onDispose(unsub);
+    if (subs.keys.contains(this)) return this;
+    subs[this] = sub();
+    onDispose(() => subs.remove(this));
     return this;
   }
 }
