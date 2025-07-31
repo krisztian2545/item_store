@@ -63,8 +63,8 @@ extension RefUtilsExtension on Ref {
   /// Calls the provided function only once.
   /// If you want to use more than one function to be called once,
   /// use the [tag] to differentiate them.
-  void callOnce(Function() oneOffFun, {Object? tag}) {
-    local((_) => oneOffFun(), key: (callOnce, tag));
+  T callOnce<T>(T Function() oneOffFun, {Object? tag}) {
+    return local((_) => oneOffFun(), key: (callOnce, tag));
   }
 
   T memo<T>(T Function() factory, List dependencies, {Object? tag}) {
