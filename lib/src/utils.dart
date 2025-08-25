@@ -198,3 +198,5 @@ extension ItemsApiUtilsExtension on ItemsApi {
     return readByKey(itemFactory);
   }
 }
+
+ItemStore localStoreFactory(Ref ref) => ref.local;
