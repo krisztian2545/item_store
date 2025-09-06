@@ -95,6 +95,45 @@ extension RefUtilsExtension on Ref {
       return (() => value, (newValue) => value = newValue);
     });
   }
+
+  // --------------------------- Dependency Tree ------------------------------
+
+  void dependOnIfExists(Object key) {
+    readItem(key)?.ref.onDispose(disposeSelf);
+  }
+
+  T? readDepByKey<T>(Object key) {
+    if (!proxiedStore.contains(key)) return null;
+
+    dependOnIfExists(key);
+    return proxiedStore.readByKey<T>(key);
+  }
+
+  T? readDep<T>(ItemFactory<T> itemFactory, {Object? key}) {
+    final realKey = ItemStore.keyFrom(itemFactory, key);
+    if (!proxiedStore.contains(realKey)) return null;
+
+    dependOnIfExists(realKey);
+    return proxiedStore.read<T>(itemFactory, key: key);
+  }
+
+  T writeDep<T>(ItemFactory<T> itemFactory, {Object? key}) {
+    final result = proxiedStore.write<T>(itemFactory, key: key);
+    dependOnIfExists(ItemStore.keyFrom(itemFactory, key));
+    return result;
+  }
+
+  T getDep<T>(ItemFactory<T> itemFactory, {Object? key}) {
+    final result = proxiedStore.get<T>(itemFactory, key: key);
+    dependOnIfExists(ItemStore.keyFrom(itemFactory, key));
+    return result;
+  }
+
+  T dep<T>(ItemFactory<T> itemFactory, {Object? key}) {
+    final result = proxiedStore.get<T>(itemFactory, key: key);
+    dependOnIfExists(ItemStore.keyFrom(itemFactory, key));
+    return result;
+  }
 }
 
 extension ItemsApiUtilsExtension on ItemsApi {
@@ -177,7 +216,7 @@ extension ItemsApiUtilsExtension on ItemsApi {
 
   // --------------------------------- Other ----------------------------------
 
-  GetSet<List?> _dependenciesOf(
+  GetSet<List?> _memoDependenciesOf(
     Ref ref,
     Object key,
   ) {
@@ -188,7 +227,7 @@ extension ItemsApiUtilsExtension on ItemsApi {
   }
 
   T memoItem<T>(ItemFactory<T> itemFactory, List dependencies) {
-    final (getDeps, setDeps) = getpf(_dependenciesOf)(itemFactory);
+    final (getDeps, setDeps) = getpf(_memoDependenciesOf)(itemFactory);
 
     if (getDeps() != dependencies) {
       setDeps(dependencies);

@@ -65,6 +65,8 @@ abstract mixin class ItemsApi {
 
   void disposeValue<T>([Object? tag]);
 
+  Item<T>? readItem<T>(Object key);
+
   /// Disposes the item and then removes it from the cache.
   void disposeItem(Object key);
 
@@ -92,32 +94,32 @@ abstract mixin class ItemsApi {
 }
 
 abstract mixin class ProxyItemsApi<IS extends ItemStore> implements ItemsApi {
-  IS get proxyStory;
+  IS get proxiedStore;
 
   @override
-  T? readByKey<T>(Object key) => proxyStory.readByKey<T>(key);
+  T? readByKey<T>(Object key) => proxiedStore.readByKey<T>(key);
 
   @override
   T? read<T>(ItemFactory<T> itemFactory, {Object? key}) =>
-      proxyStory.read<T>(itemFactory, key: key);
+      proxiedStore.read<T>(itemFactory, key: key);
 
   @override
   T write<T>(ItemFactory<T> itemFactory, {Object? key}) {
-    return proxyStory.write<T>(itemFactory, key: key);
+    return proxiedStore.write<T>(itemFactory, key: key);
   }
 
   T call<T>(ItemFactory<T> itemFactory, {Object? key}) {
-    return proxyStory.get<T>(itemFactory, key: key);
+    return proxiedStore.get<T>(itemFactory, key: key);
   }
 
   @override
   T get<T>(ItemFactory<T> itemFactory, {Object? key}) {
-    return proxyStory.get<T>(itemFactory, key: key);
+    return proxiedStore.get<T>(itemFactory, key: key);
   }
 
   @override
   T run<T>(ItemFactory<T> itemFactory) {
-    return proxyStory.run<T>(itemFactory);
+    return proxiedStore.run<T>(itemFactory);
   }
 
   @override
@@ -127,7 +129,7 @@ abstract mixin class ProxyItemsApi<IS extends ItemStore> implements ItemsApi {
     bool disposable = false,
     void Function(T)? dispose,
   }) {
-    return proxyStory.writeValue<T>(
+    return proxiedStore.writeValue<T>(
       value,
       tag: tag,
       disposable: disposable,
@@ -136,30 +138,35 @@ abstract mixin class ProxyItemsApi<IS extends ItemStore> implements ItemsApi {
   }
 
   @override
-  T? readValue<T>([Object? tag]) => proxyStory.readValue<T>(tag);
+  T? readValue<T>([Object? tag]) => proxiedStore.readValue<T>(tag);
 
   @override
   void disposeValue<T>([Object? tag]) {
-    proxyStory.disposeValue<T>(tag);
+    proxiedStore.disposeValue<T>(tag);
   }
 
   @override
   void overrideFactory<T>(ItemFactory<T> from, ItemFactory<T> to) {
-    proxyStory.overrideFactory<T>(from, to);
+    proxiedStore.overrideFactory<T>(from, to);
   }
 
   @override
   void removeOverrideFrom(ItemFactory factory) {
-    proxyStory.removeOverrideFrom(factory);
+    proxiedStore.removeOverrideFrom(factory);
+  }
+
+  @override
+  Item<T>? readItem<T>(Object key) {
+    return proxiedStore.readItem<T>(key);
   }
 
   @override
   void disposeItem(Object key) {
-    proxyStory.disposeItem(key);
+    proxiedStore.disposeItem(key);
   }
 
   @override
   void disposeItems(Iterable<Object> keys) {
-    proxyStory.disposeItems(keys);
+    proxiedStore.disposeItems(keys);
   }
 }

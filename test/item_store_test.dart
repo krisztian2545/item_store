@@ -16,8 +16,7 @@ class Animal {
 }
 
 void main() {
-  (ItemStore, String, int Function(Ref)) initialVariables() =>
-      (ItemStore(), 'key', (_) => 42);
+  (ItemStore, String, int Function(Ref)) initialVariables() => (ItemStore(), 'key', (_) => 42);
 
   group('ItemStore', () {
     test('write', () {
@@ -60,19 +59,6 @@ void main() {
           ref.onDispose(() => disposed = true);
           return 42;
         }
-
-        // int counter(Ref ref, [int initial = 0]) {
-        //   return (
-        //     ref.reader(counter)(),
-        //     () => ref.writer(counter)(initial + 1),
-        //   );
-        // }
-
-        // final counter = store.getter(counter)();
-        // final counter = store.getter(tag: 'main', counter)();
-
-        // final (getCount, incCount) = store.writer(counter)();
-        // store.writer((_, x) => x, globalKey: 'count')(5);
 
         store.write(itemFactory, key: key);
         store.disposeItem(key);
@@ -127,10 +113,8 @@ void main() {
 
         final retrievedPerson = store.writeValue(person);
         final retrievedAnimal = store.writeValue(animal);
-        final retrievedTaggedPerson =
-            store.writeValue(taggedPerson, tag: "tag");
-        final retrievedTaggedAnimal =
-            store.writeValue(taggedAnimal, tag: "tag");
+        final retrievedTaggedPerson = store.writeValue(taggedPerson, tag: "tag");
+        final retrievedTaggedAnimal = store.writeValue(taggedAnimal, tag: "tag");
 
         expect(retrievedPerson, person);
         expect(retrievedAnimal, animal);
@@ -164,68 +148,181 @@ void main() {
       });
     });
 
-    // group('ItemStore "p" syntax', () {
-    //   test('write with parameters', () {
-    //     final (store, _, _) = initialVariables();
-    //     int sum(Ref ref, List<int> args) =>
-    //         args.reduce((value, element) => value + element);
+    group('Dependencies', () {
+      test('dependOnIfExists should set up disposal chain when item exists', () {
+        final store = ItemStore();
+        store.write((ref) => 'dependency', key: 'dependency');
+        store.write(
+          key: 'item',
+          (ref) {
+            ref.dependOnIfExists('dependency');
+            return 'item';
+          },
+        );
 
-    //     final item = store.write(sum.p([2, 20, 6, 14]));
+        expect(store.contains('dependency'), true);
+        expect(store.contains('item'), true);
 
-    //     expect(item, 42);
-    //   });
+        store.disposeItem('dependency');
 
-    //   test('read', () {
-    //     final (store, _, _) = initialVariables();
-    //     int sum(Ref ref, List<int> args) =>
-    //         args.reduce((value, element) => value + element);
-    //     final args = [2, 20, 6, 14];
+        expect(store.contains('dependency'), false);
+        expect(store.contains('item'), false);
+      });
 
-    //     store.write(sum.p(args));
+      test('dependOnIfExists should do nothing when item does not exist', () {
+        final store = ItemStore();
+        store.write(
+          key: 'item',
+          (ref) {
+            ref.dependOnIfExists('dependency');
+            return 'item';
+          },
+        );
 
-    //     expect(store.read(sum.p(args)), 42);
-    //   });
+        expect(store.contains('dependency'), false);
+        expect(store.contains('item'), true);
 
-    //   test('get by globalKey', () {
-    //     final (store, key, _) = initialVariables();
-    //     int numberOfBuilds = 0;
-    //     int sum(Ref ref, List<int> args) {
-    //       numberOfBuilds++;
-    //       return args.reduce((value, element) => value + element);
-    //     }
+        store.disposeItem('dependency');
 
-    //     final args = [2, 20, 6, 14];
+        expect(store.contains('dependency'), false);
+        expect(store.contains('item'), true);
+      });
 
-    //     expect(store.get(sum.p(args), globalKey: key), 42);
-    //     expect(store.get(sum.p(args), globalKey: key), 42);
-    //     expect(numberOfBuilds, 1);
-    //   });
+      test("readDepByKey should return the item's data and set up dependency", () {
+        final store = ItemStore();
+        store.write((ref) => 'dependency', key: 'dependency');
+        final item = store.write(
+          key: 'item',
+          (ref) => '${ref.readDepByKey('dependency')} in item',
+        );
 
-    //   test('get with same tag multiple times', () {
-    //     final (store, key, _) = initialVariables();
-    //     int numberOfBuilds = 0;
-    //     int add(Ref ref, (int, int) args) {
-    //       numberOfBuilds++;
-    //       return args.$1 + args.$2;
-    //     }
+        expect(store.contains('dependency'), true);
+        expect(store.contains('item'), true);
+        expect(item, 'dependency in item');
 
-    //     final params = (20, 22);
-    //     expect(store.get(add.p(params)), 42);
-    //     expect(store.get(add.p(params)), 42);
-    //     expect(numberOfBuilds, 1);
-    //   });
+        store.disposeItem('dependency');
 
-    //   test('get with different tags', () {
-    //     final (store, key, _) = initialVariables();
-    //     int add(Ref ref, (int, int) args) {
-    //       return args.$1 + args.$2;
-    //     }
+        expect(store.contains('dependency'), false);
+        expect(store.contains('item'), false);
+      });
 
-    //     final params1 = (20, 22);
-    //     final params2 = (1, 3);
-    //     expect(store.get(add.p(params1)), 42);
-    //     expect(store.get(add.p(params2)), 4);
-    //   });
-    // });
+      test('readDepByKey should return null and not set up dependency when item does not exist',
+          () {
+        final store = ItemStore();
+        final item = store.write(
+          key: 'item',
+          (ref) => '${ref.readDepByKey('dependency')} in item',
+        );
+
+        expect(store.contains('dependency'), false);
+        expect(store.contains('item'), true);
+        expect(item, 'null in item');
+
+        store.disposeItem('dependency');
+
+        expect(store.contains('dependency'), false);
+        expect(store.contains('item'), true);
+      });
+
+      test("readDep should return the item's data and set up dependency", () {
+        final store = ItemStore();
+        String dependency(Ref ref) => 'dependency';
+        store.write(dependency);
+        final item = store.write(
+          key: 'item',
+          (ref) => '${ref.readDep(dependency)} in item',
+        );
+
+        expect(store.contains(dependency), true);
+        expect(store.contains('item'), true);
+        expect(item, 'dependency in item');
+
+        store.disposeItem(dependency);
+
+        expect(store.contains(dependency), false);
+        expect(store.contains('item'), false);
+      });
+
+      test('readDep should return null and not set up dependency when item does not exist', () {
+        final store = ItemStore();
+        String dependency(Ref ref) => 'dependency';
+        final item = store.write(
+          key: 'item',
+          (ref) => '${ref.readDep(dependency)} in item',
+        );
+
+        expect(store.contains(dependency), false);
+        expect(store.contains('item'), true);
+        expect(item, 'null in item');
+
+        store.disposeItem(dependency);
+
+        expect(store.contains(dependency), false);
+        expect(store.contains('item'), true);
+      });
+
+      test("writeDep should return the item's data and set up dependency", () {
+        final store = ItemStore();
+        String dependency(Ref ref) => 'dependency';
+
+        expect(store.contains(dependency), false);
+
+        final item = store.write(
+          key: 'item',
+          (ref) => '${ref.writeDep(dependency)} in item',
+        );
+
+        expect(store.contains(dependency), true);
+        expect(store.contains('item'), true);
+        expect(item, 'dependency in item');
+
+        store.disposeItem(dependency);
+
+        expect(store.contains(dependency), false);
+        expect(store.contains('item'), false);
+      });
+
+      test("getDep should return the item's data and set up dependency", () {
+        final store = ItemStore();
+        String dependency(Ref ref) => 'dependency';
+
+        expect(store.contains(dependency), false);
+
+        final item = store.write(
+          key: 'item',
+          (ref) => '${ref.getDep(dependency)} in item',
+        );
+
+        expect(store.contains(dependency), true);
+        expect(store.contains('item'), true);
+        expect(item, 'dependency in item');
+
+        store.disposeItem(dependency);
+
+        expect(store.contains(dependency), false);
+        expect(store.contains('item'), false);
+      });
+
+      test("dep should return the item's data and set up dependency", () {
+        final store = ItemStore();
+        String dependency(Ref ref) => 'dependency';
+
+        expect(store.contains(dependency), false);
+
+        final item = store.write(
+          key: 'item',
+          (ref) => '${ref.dep(dependency)} in item',
+        );
+
+        expect(store.contains(dependency), true);
+        expect(store.contains('item'), true);
+        expect(item, 'dependency in item');
+
+        store.disposeItem(dependency);
+
+        expect(store.contains(dependency), false);
+        expect(store.contains('item'), false);
+      });
+    });
   });
 }

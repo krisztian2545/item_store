@@ -10,10 +10,12 @@ typedef ItemCacheMap = Map<Object, Item>;
 typedef OverridesMap = Map<ItemFactory, ItemFactory>;
 typedef OverrideRecord<T> = (ItemFactory<T>, ItemFactory<T>);
 typedef OverridesList = List<OverrideRecord>;
+typedef DefaultItemStoreType = SimpleItemStore;
 
-abstract interface class ItemStore with ItemsApi {
-  factory ItemStore({OverridesList? overrides}) =>
-      SimpleItemStore(overrides: overrides);
+abstract class ItemStore with ItemsApi {
+  factory ItemStore({OverridesList? overrides}) => SimpleItemStore(overrides: overrides);
+
+  static const defaultType = DefaultItemStoreType;
 
   static const _assertFactoryOverrideReturnTypeMessage =
       "Can't override an item factory with different return type!";
@@ -42,12 +44,13 @@ abstract interface class ItemStore with ItemsApi {
   }
 
   /// Calculates the global key of a value.
-  static Object valueKeyFrom(Type type, {Object? tag}) =>
-      tag == null ? type : (type, tag);
+  static Object valueKeyFrom(Type type, {Object? tag}) => tag == null ? type : (type, tag);
 
   ItemCacheMap get cache;
 
   bool get isEmpty;
+
+  bool contains(Object key);
 
   OverridesMap get overrides;
 
@@ -61,8 +64,7 @@ class SimpleItemStore implements ItemStore {
     _initOverrides(overrides);
   }
 
-  SimpleItemStore.from(ItemCacheMap map, {OverridesList? overrides})
-      : _cache = map {
+  SimpleItemStore.from(ItemCacheMap map, {OverridesList? overrides}) : _cache = map {
     _initOverrides(overrides);
   }
 
@@ -83,6 +85,12 @@ class SimpleItemStore implements ItemStore {
   /// Please don't use this unless you really have to.
   @override
   ItemCacheMap get cache => _cache;
+
+  @override
+  bool get isEmpty => _cache.isEmpty;
+
+  @override
+  bool contains(Object key) => cache.containsKey(key);
 
   @override
   final OverridesMap overrides = {};
@@ -119,7 +127,7 @@ class SimpleItemStore implements ItemStore {
       disposeItem(actualKey);
     }
 
-    _cache[actualKey] = Item<T>(result, ref.itemMetaData);
+    _cache[actualKey] = Item<T>(result, ref);
 
     return result;
   }
@@ -211,9 +219,14 @@ class SimpleItemStore implements ItemStore {
     // schedule the disposal of the item's local store
     ref.onDispose(ref.local.dispose);
 
-    Item<T>(result, ref.itemMetaData).dispose();
+    Item<T>(result, ref).dispose();
 
     return result;
+  }
+
+  @override
+  Item<T>? readItem<T>(Object key) {
+    return _cache[key] as Item<T>?;
   }
 
   /// Disposes the item and then removes it from the cache.
@@ -233,9 +246,6 @@ class SimpleItemStore implements ItemStore {
     globalKeys.forEach(disposeItem);
   }
 
-  @override
-  bool get isEmpty => _cache.isEmpty;
-
   /// Disposes items, clears cache and overrides.
   @override
   void dispose() {
@@ -247,8 +257,8 @@ class SimpleItemStore implements ItemStore {
   }
 }
 
-extension type CallableItemStore(ItemStore _store) implements ItemStore {
+extension type CallableItemStore<IS extends ItemStore>(IS ogApi) implements ItemStore {
   T call<T>(ItemFactory<T> itemFactory, {Object? key}) {
-    return _store.get<T>(itemFactory, key: key);
+    return get<T>(itemFactory, key: key);
   }
 }

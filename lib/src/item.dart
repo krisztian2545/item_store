@@ -1,15 +1,17 @@
 import 'dart:collection';
 
+import 'package:item_store/src/ref.dart';
+
 typedef ItemDisposeCallback = void Function();
 
 class Item<T> {
-  Item(this.data, this.metaData);
+  Item(this.data, this.ref);
 
   final T data;
-  final ItemMetaData metaData;
+  final Ref ref;
 
   void dispose() {
-    metaData._dispose();
+    ref.itemMetaData._dispose();
   }
 }
 
