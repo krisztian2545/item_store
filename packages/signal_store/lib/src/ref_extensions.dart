@@ -56,4 +56,8 @@ extension SignalsRefUtilsX on Ref {
         dependencies: dependencies,
         lazy: lazy,
       )..bindTo(this);
+
+  void cancelSignalDependency(ReadonlySignal signal) {
+    local.readByKey<void Function()>((signalDependency: signal))?.call();
+  }
 }

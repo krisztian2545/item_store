@@ -1,5 +1,6 @@
 import 'package:item_store/item_store.dart';
 import 'package:signals_core/signals_core.dart';
+import 'ref_extensions.dart';
 
 Map<ReadonlySignal, void Function()> _signalSubs(Ref ref) {
   // subscribed signals and subscribe cleanups
@@ -20,6 +21,19 @@ extension SignalUtilsX<T, S extends ReadonlySignal<T>> on S {
     if (subs.keys.contains(this)) return this;
     subs[this] = sub();
     onDispose(() => subs.remove(this));
+    return this;
+  }
+
+  /// Also look at [SignalsRefUtilsX.cancelSignalDependency].
+  S makeDependencyOf(Ref ref) {
+    ref.local(
+      (_) {
+        final cleanup = onDispose(ref.disposeSelf);
+        ref.onDispose(cleanup);
+        return cleanup;
+      },
+      key: (signalDependency: this),
+    );
     return this;
   }
 }
@@ -46,8 +60,8 @@ class CachedFutureSignalContainer<T, Arg>
         );
 }
 
-extension SharedSignalContainerExtension<T, Arg,
-    S extends ReadonlySignalMixin<T>> on SignalContainer<T, Arg, S> {
+extension SharedSignalContainerExtension<T, Arg, S extends ReadonlySignalMixin<T>>
+    on SignalContainer<T, Arg, S> {
   void setSignalValues(Map<Arg, T> map, {bool putIfAbsent = true}) {
     void tryUpdateSignal(S maybeSignal, T value) {
       if (maybeSignal case final Signal signal) {
