@@ -5,4 +5,4 @@ export 'src/widget_signal_mixin.dart';
 
 // re-export packages
 export 'package:item_store_flutter/item_store_flutter.dart';
-export 'package:signal_store/signal_store.dart';
+export 'package:signal_store/signal_store.dart' hide SignalUtilsX;

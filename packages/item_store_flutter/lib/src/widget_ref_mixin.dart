@@ -7,7 +7,7 @@ mixin CustomWidgetRefMixin<T extends StatefulWidget> on State<T> {
   // TODO what if the implementation doesn't always return the same store?
   ItemStore get store;
 
-  late final WidgetRef _ref = WidgetRef(store: store);
+  late final WidgetRef _ref = WidgetRef(store: store)..local.writeValue(context);
 
   WidgetRef get ref => _ref;
 
@@ -22,7 +22,7 @@ mixin CustomWidgetRefMixin<T extends StatefulWidget> on State<T> {
 }
 
 mixin WidgetRefMixin<T extends StatefulWidget> on State<T> {
-  late final WidgetRef _ref = WidgetRef(store: context.readStore);
+  late final WidgetRef _ref = WidgetRef(store: context.readStore)..local.writeValue(context);
 
   WidgetRef get ref => _ref;
 
