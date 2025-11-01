@@ -60,7 +60,7 @@ class CachedFutureSignalContainer<T, Arg>
         );
 }
 
-extension SharedSignalContainerExtension<T, Arg, S extends ReadonlySignalMixin<T>>
+extension SharedSignalContainerExtension<T, Arg, S extends ReadonlySignal<T>>
     on SignalContainer<T, Arg, S> {
   void setSignalValues(Map<Arg, T> map, {bool putIfAbsent = true}) {
     void tryUpdateSignal(S maybeSignal, T value) {
