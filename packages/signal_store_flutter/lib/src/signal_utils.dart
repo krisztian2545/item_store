@@ -8,6 +8,10 @@ extension WidgetRefSignalUtilsExtensionX on WidgetRef {
 }
 
 extension FlutterSignalUtilsX<T, S extends ReadonlySignal<T>> on S {
+  void Function() sub() => SignalUtilsX(this).sub();
+
+  S subWith(Ref ref) => SignalUtilsX(this).subWith(ref);
+
   /// Also look at [SignalsRefUtilsX.cancelSignalDependency].
   S makeDependencyOf(Ref ref) {
     if (ref is WidgetRef) {
