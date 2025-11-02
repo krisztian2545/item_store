@@ -58,6 +58,6 @@ extension SignalsRefUtilsX on Ref {
       )..bindTo(this);
 
   void cancelSignalDependency(ReadonlySignal signal) {
-    local.readByKey<void Function()>((signalDependency: signal))?.call();
+    local.disposeItem((signalDependency: signal));
   }
 }

@@ -2,25 +2,41 @@ import 'package:item_store/item_store.dart';
 import 'package:signals_core/signals_core.dart';
 import 'ref_extensions.dart';
 
-Map<ReadonlySignal, void Function()> _signalSubs(Ref ref) {
+Map<ReadonlySignal, void Function()> _signalSubCleanups(Ref ref) {
   // subscribed signals and subscribe cleanups
-  final subs = <ReadonlySignal, void Function()>{};
+  final cleanups = <ReadonlySignal, void Function()>{};
   ref.onDispose(() {
-    for (final unsub in subs.values) {
-      unsub();
+    for (final cleanup in cleanups.values) {
+      cleanup();
     }
+    cleanups.clear();
   });
-  return subs;
+  return cleanups;
 }
 
 extension SignalUtilsX<T, S extends ReadonlySignal<T>> on S {
   void Function() sub() => subscribe((_) {});
 
   S subWith(Ref ref) {
-    final subs = ref.local(_signalSubs);
-    if (subs.keys.contains(this)) return this;
-    subs[this] = sub();
-    onDispose(() => subs.remove(this));
+    final signalSubCleanupsOfRef = ref.local(_signalSubCleanups);
+    if (signalSubCleanupsOfRef.keys.contains(this)) return this;
+
+    final forgetSignalTiesToRefSub = onDispose(() {
+      // tell ref to forget this signal sub
+      signalSubCleanupsOfRef
+          .remove(this)
+          // dispose effect
+          ?.call();
+    });
+
+    final cleanupSub = sub();
+
+    // on disposal of ref, cleanup effect and remove the signal's onDispose callback
+    signalSubCleanupsOfRef[this] = () {
+      cleanupSub();
+      forgetSignalTiesToRefSub();
+    };
+
     return this;
   }
 
@@ -28,9 +44,16 @@ extension SignalUtilsX<T, S extends ReadonlySignal<T>> on S {
   S makeDependencyOf(Ref ref) {
     ref.local(
       (_) {
-        final cleanup = onDispose(ref.disposeSelf);
+        late final void Function() cleanup;
+        cleanup = onDispose(() {
+          // prevent removal of this callback during execution
+          ref.removeDisposeCallback(cleanup);
+          // dispose item
+          ref.disposeSelf();
+        });
+
+        // make signal forget this ref
         ref.onDispose(cleanup);
-        return cleanup;
       },
       key: (signalDependency: this),
     );
