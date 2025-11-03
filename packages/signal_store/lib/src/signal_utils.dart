@@ -44,8 +44,11 @@ extension SignalUtilsX<T, S extends ReadonlySignal<T>> on S {
   S makeDependencyOf(Ref ref) {
     ref.local(
       (_) {
+        bool disposing = false;
         late final void Function() cleanup;
         cleanup = onDispose(() {
+          if (disposing) return;
+          disposing = true;
           if (ref.itemMetaData.disposed) return;
           // prevent removal of this callback during execution
           ref.removeDisposeCallback(cleanup);
@@ -54,7 +57,11 @@ extension SignalUtilsX<T, S extends ReadonlySignal<T>> on S {
         });
 
         // make signal forget this ref
-        ref.onDispose(cleanup);
+        ref.onDispose(() {
+          if (disposing) return;
+          disposing = true;
+          cleanup();
+        });
       },
       key: (signalDependency: this),
     );

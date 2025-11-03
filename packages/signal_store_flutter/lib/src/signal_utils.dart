@@ -17,14 +17,21 @@ extension FlutterSignalUtilsX<T, S extends ReadonlySignal<T>> on S {
     if (ref is WidgetRef) {
       ref.local(
         (_) {
+          bool disposing = false;
           final cleanup = onDispose(() {
+            if (disposing) return;
+            disposing = true;
             // rebuild widget
             final element = ref.local.readValue<BuildContext>() as Element;
             if (!element.mounted) return;
             element.markNeedsBuild();
           });
 
-          ref.onDispose(cleanup);
+          ref.onDispose(() {
+            if (disposing) return;
+            disposing = true;
+            cleanup();
+          });
         },
         key: (signalDependency: this),
       );
