@@ -19,7 +19,7 @@ extension FlutterSignalUtilsX<T, S extends ReadonlySignal<T>> on S {
         (_) {
           bool disposing = false;
           final cleanup = onDispose(() {
-            if (disposing) return;
+            if (disposing || disposed) return;
             disposing = true;
             // rebuild widget
             final element = ref.local.readValue<BuildContext>() as Element;
@@ -28,7 +28,7 @@ extension FlutterSignalUtilsX<T, S extends ReadonlySignal<T>> on S {
           });
 
           ref.onDispose(() {
-            if (disposing) return;
+            if (disposing || disposed) return;
             disposing = true;
             cleanup();
           });
