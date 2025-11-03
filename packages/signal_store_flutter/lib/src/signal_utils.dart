@@ -40,15 +40,4 @@ extension FlutterSignalUtilsX<T, S extends ReadonlySignal<T>> on S {
 
     return SignalUtilsX(this).makeDependencyOf(ref);
   }
-
-  S bindTo(Ref ref) {
-    if (ref is WidgetRef) {
-      throw UnsupportedError('WidgetRef is not supported');
-    }
-    return SignalUtilsX(this).bindTo(ref);
-  }
-
-  S disposeWith(Ref ref) {
-    return SignalUtilsX(this).disposeWith(ref);
-  }
 }

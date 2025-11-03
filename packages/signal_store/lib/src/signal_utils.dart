@@ -66,23 +66,6 @@ extension SignalUtilsX<T, S extends ReadonlySignal<T>> on S {
     );
     return this;
   }
-
-  S bindTo(Ref ref) {
-    return ObjectUtilsForRefX(this).bindTo(
-      ref,
-      dispose: (signal) {
-        if (signal.disposed) return;
-        signal.dispose();
-      },
-    );
-  }
-
-  S disposeWith(Ref ref) {
-    return ref.disposable<S>(this, (signal) {
-      if (signal.disposed) return;
-      signal.dispose();
-    });
-  }
 }
 
 extension SharedAsyncSignalExtension<T> on AsyncSignal<T> {
