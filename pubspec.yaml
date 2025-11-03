@@ -1,6 +1,6 @@
 name: item_store
 description: A service locator.
-version: 2.3.0
+version: 2.3.1
 repository: https://github.com/krisztian2545/item_store
 
 environment:

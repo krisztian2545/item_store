@@ -46,6 +46,7 @@ extension SignalUtilsX<T, S extends ReadonlySignal<T>> on S {
       (_) {
         late final void Function() cleanup;
         cleanup = onDispose(() {
+          if (ref.itemMetaData.disposed) return;
           // prevent removal of this callback during execution
           ref.removeDisposeCallback(cleanup);
           // dispose item
