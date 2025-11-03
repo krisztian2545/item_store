@@ -18,27 +18,35 @@ extension SignalsRefUtilsX on Ref {
     return cleanup;
   }
 
+  R bindToSignal<R extends ReadonlySignal<T>, T>(R signal) {
+    signal.bindTo(this, dispose: (signal) {
+      if (signal.disposed) return;
+      signal.dispose();
+    });
+    return signal;
+  }
+
   Signal<T> boundSignal<T>(
     T value, {
     String? debugLabel,
     bool autoDispose = true,
   }) =>
-      Signal<T>(
+      bindToSignal(Signal<T>(
         value,
         debugLabel: debugLabel,
         autoDispose: autoDispose,
-      )..bindTo(this);
+      ));
 
   Computed<T> boundComputed<T>(
     T Function() fn, {
     String? debugLabel,
     bool autoDispose = true,
   }) =>
-      Computed<T>(
+      bindToSignal(Computed<T>(
         fn,
         debugLabel: debugLabel,
         autoDispose: autoDispose,
-      )..bindTo(this);
+      ));
 
   FutureSignal<T> boundComputedAsync<T>(
     Future<T> Function() fn, {
@@ -48,14 +56,14 @@ extension SignalsRefUtilsX on Ref {
     List<ReadonlySignal<dynamic>> dependencies = const [],
     bool lazy = true,
   }) =>
-      FutureSignal<T>(
+      bindToSignal(FutureSignal<T>(
         fn,
         initialValue: initialValue,
         debugLabel: debugLabel,
         autoDispose: autoDispose,
         dependencies: dependencies,
         lazy: lazy,
-      )..bindTo(this);
+      ));
 
   void cancelSignalDependency(ReadonlySignal signal) {
     local.disposeItem((signalDependency: signal));
