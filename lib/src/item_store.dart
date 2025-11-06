@@ -139,7 +139,12 @@ class SimpleItemStore implements ItemStore {
 
   @override
   T get<T>(ItemFactory<T> itemFactory, {Object? key}) {
-    return read<T>(itemFactory, key: key) ?? write<T>(itemFactory, key: key);
+    final realKey = ItemStore.keyFrom(itemFactory, key);
+    final maybeItem = readItem<T>(realKey);
+    if (maybeItem != null) {
+      return maybeItem.data;
+    }
+    return write<T>(itemFactory, key: key);
   }
 
   @override
