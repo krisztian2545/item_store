@@ -69,8 +69,18 @@ extension SignalUtilsX<T, S extends ReadonlySignal<T>> on S {
 }
 
 extension SharedAsyncSignalExtension<T> on AsyncSignal<T> {
-  void setFutureValue(Future<T> newFutureValue) {
+  void setFuture(Future<T> newFutureValue) {
     setLoading();
+    newFutureValue.then(setValue, onError: setError);
+  }
+
+  void reloadWithFuture(Future<T> newFutureValue) {
+    reload();
+    newFutureValue.then(setValue, onError: setError);
+  }
+
+  void refreshWithFuture(Future<T> newFutureValue) {
+    refresh();
     newFutureValue.then(setValue, onError: setError);
   }
 }
