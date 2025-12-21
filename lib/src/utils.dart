@@ -15,11 +15,7 @@ extension ObjectUtilsForRefX<T extends Object> on T {
     void Function(T)? dispose,
     void Function(void Function() disposeItemFromStore)? onObjectDispose,
   }) {
-    return ref.bindTo<T>(
-      this,
-      dispose: dispose,
-      onObjectDispose: onObjectDispose,
-    );
+    return ref.bindTo<T>(this, dispose: dispose, onObjectDispose: onObjectDispose);
   }
 }
 
@@ -154,17 +150,11 @@ extension ItemsApiUtilsExtension on ItemsApi {
   // -------------------------------- Parameterized ---------------------------------
 
   T writep<T, A>(T Function(Ref, A) parameterizedFactory, A param) {
-    return write<T>(
-      key: parameterizedFactory,
-      (ref) => parameterizedFactory(ref, param),
-    );
+    return write<T>(key: parameterizedFactory, (ref) => parameterizedFactory(ref, param));
   }
 
   T getp<T, A>(T Function(Ref, A) parameterizedFactory, A param) {
-    return get<T>(
-      key: parameterizedFactory,
-      (ref) => parameterizedFactory(ref, param),
-    );
+    return get<T>(key: parameterizedFactory, (ref) => parameterizedFactory(ref, param));
   }
 
   T runp<T, A>(T Function(Ref, A) parameterizedFactory, A param) {
@@ -174,17 +164,11 @@ extension ItemsApiUtilsExtension on ItemsApi {
   // ------------------------ Parameterized & Tagged --------------------------
 
   T writept<T, A>(T Function(Ref, A) parameterizedFactory, A param) {
-    return write<T>(
-      key: (parameterizedFactory, param),
-      (ref) => parameterizedFactory(ref, param),
-    );
+    return write<T>(key: (parameterizedFactory, param), (ref) => parameterizedFactory(ref, param));
   }
 
   T getpt<T, A>(T Function(Ref, A) parameterizedFactory, A param) {
-    return get<T>(
-      key: (parameterizedFactory, param),
-      (ref) => parameterizedFactory(ref, param),
-    );
+    return get<T>(key: (parameterizedFactory, param), (ref) => parameterizedFactory(ref, param));
   }
 
   // ------------------------- Parameterized Factory --------------------------
@@ -192,7 +176,8 @@ extension ItemsApiUtilsExtension on ItemsApi {
   T Function(A) writepf<T, A>(T Function(Ref, A) parameterizedFactory) {
     return write<T Function(A)>(
       key: parameterizedFactory,
-      (ref) => (A param) => parameterizedFactory(ref, param),
+      (ref) =>
+          (A param) => parameterizedFactory(ref, param),
     );
   }
 
@@ -203,28 +188,20 @@ extension ItemsApiUtilsExtension on ItemsApi {
   T Function(A) getpf<T, A>(T Function(Ref, A) parameterizedFactory) {
     return write<T Function(A)>(
       key: parameterizedFactory,
-      (ref) => (A param) => parameterizedFactory(ref, param),
+      (ref) =>
+          (A param) => parameterizedFactory(ref, param),
     );
   }
 
   /// Warning: local store won't be disposed automatically after you call the returned funcion!
   T Function(A) runpf<T, A>(T Function(Ref, A) parameterizedFactory) {
     return run<T Function(A)>(
-      (ref) => (A param) => parameterizedFactory(ref, param),
+      (ref) =>
+          (A param) => parameterizedFactory(ref, param),
     );
   }
 
   // --------------------------------- Other ----------------------------------
-
-  GetSet<List?> _memoDependenciesOf(
-    Ref ref,
-    Object key,
-  ) {
-    return ref.local(
-      key: key,
-      (Ref localRef) => localRef.data<List?>(null),
-    );
-  }
 
   T memoItem<T>(ItemFactory<T> itemFactory, List dependencies) {
     final (getDeps, setDeps) = getpf(_memoDependenciesOf)(itemFactory);
@@ -236,6 +213,10 @@ extension ItemsApiUtilsExtension on ItemsApi {
 
     return readByKey(itemFactory);
   }
+}
+
+GetSet<List?> _memoDependenciesOf(Ref ref, Object key) {
+  return ref.local(key: key, (Ref localRef) => localRef.data<List?>(null));
 }
 
 ItemStore localStoreFactory(Ref ref) => ref.local;

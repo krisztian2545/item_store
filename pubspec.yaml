@@ -4,7 +4,7 @@ version: 2.3.2
 repository: https://github.com/krisztian2545/item_store
 
 environment:
-  sdk: ^3.6.2
+  sdk: ^3.10.0
 
 # Add regular dependencies here.
 dependencies:
