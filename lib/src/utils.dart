@@ -94,40 +94,58 @@ extension RefUtilsExtension on Ref {
 
   // --------------------------- Dependency Tree ------------------------------
 
+  void dependOnItem(Item item) {
+    item.ref.onDispose(disposeSelf);
+  }
+
+  void dependOnIfExistsInStore(Object key, {required ItemStore store}) {
+    if (!store.contains(key)) return;
+
+    dependOnItem(store.readItem(key)!);
+  }
+
+  void dependOn(Object key) {
+    readItem(key)!.ref.onDispose(disposeSelf);
+  }
+
   void dependOnIfExists(Object key) {
-    readItem(key)?.ref.onDispose(disposeSelf);
+    if (!proxiedStore.contains(key)) return;
+
+    dependOn(key);
   }
 
   T? readDepByKey<T>(Object key) {
     if (!proxiedStore.contains(key)) return null;
 
-    dependOnIfExists(key);
-    return proxiedStore.readByKey<T>(key);
+    dependOn(key);
+    return proxiedStore.readByKey<T>(
+      key,
+    ); // we have to get the data trough the read function to allow overriding (Probabaly should make a default implementation with mustCallSuper)
   }
 
   T? readDep<T>(ItemFactory<T> itemFactory, {Object? key}) {
     final realKey = ItemStore.keyFrom(itemFactory, key);
     if (!proxiedStore.contains(realKey)) return null;
 
-    dependOnIfExists(realKey);
+    dependOn(realKey);
     return proxiedStore.read<T>(itemFactory, key: key);
   }
 
   T writeDep<T>(ItemFactory<T> itemFactory, {Object? key}) {
     final result = proxiedStore.write<T>(itemFactory, key: key);
-    dependOnIfExists(ItemStore.keyFrom(itemFactory, key));
+    dependOn(ItemStore.keyFrom(itemFactory, key));
     return result;
   }
 
   T getDep<T>(ItemFactory<T> itemFactory, {Object? key}) {
     final result = proxiedStore.get<T>(itemFactory, key: key);
-    dependOnIfExists(ItemStore.keyFrom(itemFactory, key));
+    dependOn(ItemStore.keyFrom(itemFactory, key));
     return result;
   }
 
   T dep<T>(ItemFactory<T> itemFactory, {Object? key}) {
     final result = proxiedStore.get<T>(itemFactory, key: key);
-    dependOnIfExists(ItemStore.keyFrom(itemFactory, key));
+    dependOn(ItemStore.keyFrom(itemFactory, key));
     return result;
   }
 }

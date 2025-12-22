@@ -1,6 +1,7 @@
 import 'package:item_store/src/item_factory.dart';
 import 'package:item_store/src/items_api.dart';
 import 'package:item_store/src/utils.dart';
+import 'package:meta/meta.dart';
 
 import 'item.dart';
 import 'ref.dart';
@@ -28,10 +29,7 @@ abstract class ItemStore with ItemsApi {
   ///     [itemFactory].
   ///   - else [itemFactory] on it's own is used as the global key.
   /// {@endtemplate}
-  static Object keyFrom<T>(
-    ItemFactory<T>? itemFactory,
-    Object? key,
-  ) {
+  static Object keyFrom<T>(ItemFactory<T>? itemFactory, Object? key) {
     assert(
       itemFactory != null || key != null,
       "You must provide one of either itemFactory or globalKey!",
@@ -70,20 +68,22 @@ class SimpleItemStore implements ItemStore {
 
   void _initOverrides(OverridesList? overrides) {
     if (overrides?.isNotEmpty ?? false) {
-      this.overrides.addEntries(overrides!.map((e) {
-            assert(
-              e.$1.runtimeType == e.$2.runtimeType,
-              ItemStore._assertFactoryOverrideReturnTypeMessage,
-            );
-            return MapEntry(e.$1, e.$2);
-          }));
+      this.overrides.addEntries(
+        overrides!.map((e) {
+          assert(
+            e.$1.runtimeType == e.$2.runtimeType,
+            ItemStore._assertFactoryOverrideReturnTypeMessage,
+          );
+          return MapEntry(e.$1, e.$2);
+        }),
+      );
     }
   }
 
   final ItemCacheMap _cache;
 
-  /// Please don't use this unless you really have to.
   @override
+  @protected
   ItemCacheMap get cache => _cache;
 
   @override
@@ -153,25 +153,17 @@ class SimpleItemStore implements ItemStore {
   }
 
   @override
-  T writeValue<T>(
-    T value, {
-    Object? tag,
-    bool disposable = false,
-    void Function(T)? dispose,
-  }) {
-    return write<T>(
-      (Ref ref) {
-        if (disposable && value != null) {
-          if (dispose == null) {
-            ref.disposable<Object>(value);
-          } else {
-            ref.disposable<Object>(value, (o) => dispose(o as T));
-          }
+  T writeValue<T>(T value, {Object? tag, bool disposable = false, void Function(T)? dispose}) {
+    return write<T>((Ref ref) {
+      if (disposable && value != null) {
+        if (dispose == null) {
+          ref.disposable<Object>(value);
+        } else {
+          ref.disposable<Object>(value, (o) => dispose(o as T));
         }
-        return value;
-      },
-      key: ItemStore.valueKeyFrom(T, tag: tag),
-    );
+      }
+      return value;
+    }, key: ItemStore.valueKeyFrom(T, tag: tag));
   }
 
   @override
@@ -193,10 +185,7 @@ class SimpleItemStore implements ItemStore {
   /// to override the value of a key, consider using [write] instead.
   @override
   void overrideFactory<T>(ItemFactory<T> from, ItemFactory<T> to) {
-    assert(
-      from.runtimeType == to.runtimeType,
-      ItemStore._assertFactoryOverrideReturnTypeMessage,
-    );
+    assert(from.runtimeType == to.runtimeType, ItemStore._assertFactoryOverrideReturnTypeMessage);
     overrides[from] = to;
   }
 

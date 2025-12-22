@@ -42,12 +42,7 @@ abstract mixin class ItemsApi {
   /// store.write((_) => "John", globalKey: (String, "the second"));
   /// store.writeValue<String>("John", tag: "the second"); // achieves the same as above
   /// ```
-  T writeValue<T>(
-    T value, {
-    Object? tag,
-    bool disposable,
-    void Function(T)? dispose,
-  });
+  T writeValue<T>(T value, {Object? tag, bool disposable, void Function(T)? dispose});
 
   /// Reads the cached value stored with a key that is either the [T] type,
   /// or a record consisting of the type ([T]) and [tag] if it's not null (like (T, tag)).
@@ -123,18 +118,8 @@ abstract mixin class ProxyItemsApi<IS extends ItemStore> implements ItemsApi {
   }
 
   @override
-  T writeValue<T>(
-    T value, {
-    Object? tag,
-    bool disposable = false,
-    void Function(T)? dispose,
-  }) {
-    return proxiedStore.writeValue<T>(
-      value,
-      tag: tag,
-      disposable: disposable,
-      dispose: dispose,
-    );
+  T writeValue<T>(T value, {Object? tag, bool disposable = false, void Function(T)? dispose}) {
+    return proxiedStore.writeValue<T>(value, tag: tag, disposable: disposable, dispose: dispose);
   }
 
   @override

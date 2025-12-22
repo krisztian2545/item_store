@@ -152,13 +152,10 @@ void main() {
       test('dependOnIfExists should set up disposal chain when item exists', () {
         final store = ItemStore();
         store.write((ref) => 'dependency', key: 'dependency');
-        store.write(
-          key: 'item',
-          (ref) {
-            ref.dependOnIfExists('dependency');
-            return 'item';
-          },
-        );
+        store.write(key: 'item', (ref) {
+          ref.dependOnIfExists('dependency');
+          return 'item';
+        });
 
         expect(store.contains('dependency'), true);
         expect(store.contains('item'), true);
@@ -171,13 +168,10 @@ void main() {
 
       test('dependOnIfExists should do nothing when item does not exist', () {
         final store = ItemStore();
-        store.write(
-          key: 'item',
-          (ref) {
-            ref.dependOnIfExists('dependency');
-            return 'item';
-          },
-        );
+        store.write(key: 'item', (ref) {
+          ref.dependOnIfExists('dependency');
+          return 'item';
+        });
 
         expect(store.contains('dependency'), false);
         expect(store.contains('item'), true);
@@ -191,10 +185,7 @@ void main() {
       test("readDepByKey should return the item's data and set up dependency", () {
         final store = ItemStore();
         store.write((ref) => 'dependency', key: 'dependency');
-        final item = store.write(
-          key: 'item',
-          (ref) => '${ref.readDepByKey('dependency')} in item',
-        );
+        final item = store.write(key: 'item', (ref) => '${ref.readDepByKey('dependency')} in item');
 
         expect(store.contains('dependency'), true);
         expect(store.contains('item'), true);
@@ -206,32 +197,31 @@ void main() {
         expect(store.contains('item'), false);
       });
 
-      test('readDepByKey should return null and not set up dependency when item does not exist',
-          () {
-        final store = ItemStore();
-        final item = store.write(
-          key: 'item',
-          (ref) => '${ref.readDepByKey('dependency')} in item',
-        );
+      test(
+        'readDepByKey should return null and not set up dependency when item does not exist',
+        () {
+          final store = ItemStore();
+          final item = store.write(
+            key: 'item',
+            (ref) => '${ref.readDepByKey('dependency')} in item',
+          );
 
-        expect(store.contains('dependency'), false);
-        expect(store.contains('item'), true);
-        expect(item, 'null in item');
+          expect(store.contains('dependency'), false);
+          expect(store.contains('item'), true);
+          expect(item, 'null in item');
 
-        store.disposeItem('dependency');
+          store.disposeItem('dependency');
 
-        expect(store.contains('dependency'), false);
-        expect(store.contains('item'), true);
-      });
+          expect(store.contains('dependency'), false);
+          expect(store.contains('item'), true);
+        },
+      );
 
       test("readDep should return the item's data and set up dependency", () {
         final store = ItemStore();
         String dependency(Ref ref) => 'dependency';
         store.write(dependency);
-        final item = store.write(
-          key: 'item',
-          (ref) => '${ref.readDep(dependency)} in item',
-        );
+        final item = store.write(key: 'item', (ref) => '${ref.readDep(dependency)} in item');
 
         expect(store.contains(dependency), true);
         expect(store.contains('item'), true);
@@ -246,10 +236,7 @@ void main() {
       test('readDep should return null and not set up dependency when item does not exist', () {
         final store = ItemStore();
         String dependency(Ref ref) => 'dependency';
-        final item = store.write(
-          key: 'item',
-          (ref) => '${ref.readDep(dependency)} in item',
-        );
+        final item = store.write(key: 'item', (ref) => '${ref.readDep(dependency)} in item');
 
         expect(store.contains(dependency), false);
         expect(store.contains('item'), true);
@@ -267,10 +254,7 @@ void main() {
 
         expect(store.contains(dependency), false);
 
-        final item = store.write(
-          key: 'item',
-          (ref) => '${ref.writeDep(dependency)} in item',
-        );
+        final item = store.write(key: 'item', (ref) => '${ref.writeDep(dependency)} in item');
 
         expect(store.contains(dependency), true);
         expect(store.contains('item'), true);
@@ -288,10 +272,7 @@ void main() {
 
         expect(store.contains(dependency), false);
 
-        final item = store.write(
-          key: 'item',
-          (ref) => '${ref.getDep(dependency)} in item',
-        );
+        final item = store.write(key: 'item', (ref) => '${ref.getDep(dependency)} in item');
 
         expect(store.contains(dependency), true);
         expect(store.contains('item'), true);
@@ -309,10 +290,7 @@ void main() {
 
         expect(store.contains(dependency), false);
 
-        final item = store.write(
-          key: 'item',
-          (ref) => '${ref.dep(dependency)} in item',
-        );
+        final item = store.write(key: 'item', (ref) => '${ref.dep(dependency)} in item');
 
         expect(store.contains(dependency), true);
         expect(store.contains('item'), true);
