@@ -95,7 +95,18 @@ extension RefUtilsExtension on Ref {
   // --------------------------- Dependency Tree ------------------------------
 
   void dependOnItem(Item item) {
-    item.ref.onDispose(disposeSelf);
+    late final void Function() cleanUpDependency;
+    void safeDisposeSelf() {
+      removeDisposeCallback(cleanUpDependency);
+      disposeSelf();
+    }
+
+    cleanUpDependency = () {
+      item.ref.removeDisposeCallback(safeDisposeSelf);
+    };
+
+    item.ref.onDispose(safeDisposeSelf);
+    onDispose(cleanUpDependency);
   }
 
   void dependOnIfExistsInStore(Object key, {required ItemStore store}) {
