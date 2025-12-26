@@ -15,26 +15,23 @@ extension FlutterSignalUtilsX<T, S extends ReadonlySignal<T>> on S {
   /// Also look at [SignalsRefUtilsX.cancelSignalDependency].
   S makeDependencyOf(Ref ref) {
     if (ref is WidgetRef) {
-      ref.local(
-        (_) {
-          bool disposing = false;
-          final cleanup = onDispose(() {
-            if (disposing || disposed) return;
-            disposing = true;
-            // rebuild widget
-            final element = ref.local.readValue<BuildContext>() as Element;
-            if (!element.mounted) return;
-            element.markNeedsBuild();
-          });
+      ref.local((_) {
+        bool disposing = false;
+        final cleanup = onDispose(() {
+          if (disposing || disposed) return;
+          disposing = true;
+          // rebuild widget
+          final element = ref.local.readValue<BuildContext>() as Element;
+          if (!element.mounted) return;
+          element.markNeedsBuild();
+        });
 
-          ref.onDispose(() {
-            if (disposing || disposed) return;
-            disposing = true;
-            cleanup();
-          });
-        },
-        key: (signalDependency: this),
-      );
+        ref.onDispose(() {
+          if (disposing || disposed) return;
+          disposing = true;
+          cleanup();
+        });
+      }, key: (signalDependency: this));
       return this;
     }
 

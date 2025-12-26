@@ -4,13 +4,10 @@ import 'package:item_store/item_store.dart';
 class WidgetRef<IS extends ItemStore, LocalIS extends ItemStore>
     with ProxyItemsApi<IS>
     implements Ref<IS, LocalIS> {
-  WidgetRef({
-    required IS store,
-    CallableItemStore<LocalIS>? localStore,
-    ItemMetaData? itemMetaData,
-  })  : _store = store,
-        _local = localStore,
-        itemMetaData = itemMetaData ?? ItemMetaData() {
+  WidgetRef({required IS store, CallableItemStore<LocalIS>? localStore, ItemMetaData? itemMetaData})
+    : _store = store,
+      _local = localStore,
+      itemMetaData = itemMetaData ?? ItemMetaData() {
     _item = Item(null, this);
   }
 
@@ -44,7 +41,8 @@ class WidgetRef<IS extends ItemStore, LocalIS extends ItemStore>
   @override
   void disposeSelf() {
     throw UnsupportedError(
-        "Since a widget ref's item is not stored in the store, it can't be disposed manually. It will be disposed with the widget.");
+      "Since a widget ref's item is not stored in the store, it can't be disposed manually. It will be disposed with the widget.",
+    );
   }
 
   /// Calls all the dispose callbacks registered for this [WidgetRef],
@@ -56,7 +54,8 @@ class WidgetRef<IS extends ItemStore, LocalIS extends ItemStore>
 
   @override
   Object get key => throw UnsupportedError(
-      "Since a widget ref's item is not stored in the store, it doesn't have a key.");
+    "Since a widget ref's item is not stored in the store, it doesn't have a key.",
+  );
 
   @override
   final ItemMetaData itemMetaData;

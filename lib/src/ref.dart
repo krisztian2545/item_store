@@ -9,10 +9,10 @@ class Ref<IS extends ItemStore, LocalIS extends ItemStore> with ProxyItemsApi<IS
     required this.key,
     CallableItemStore<LocalIS>? localStore,
     ItemMetaData? itemMetaData,
-  })  : assert(localStore != null || (LocalIS == ItemStore || LocalIS == DefaultItemStoreType)),
-        _store = store,
-        _local = localStore,
-        itemMetaData = itemMetaData ?? ItemMetaData();
+  }) : assert(localStore != null || (LocalIS == ItemStore || LocalIS == DefaultItemStoreType)),
+       _store = store,
+       _local = localStore,
+       itemMetaData = itemMetaData ?? ItemMetaData();
 
   final IS _store;
 

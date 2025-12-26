@@ -21,7 +21,7 @@ extension ObjectUtilsForRefX<T extends Object> on T {
 
 typedef GetSet<T> = (T Function(), void Function(T));
 
-extension RefUtilsExtension on Ref {
+extension ObjectDisposeRefExtension on Ref {
   /// Binds the provided [object] to the [onDispose] callback, allowing it to be
   /// disposed when the item gets disposed.
   ///
@@ -55,7 +55,9 @@ extension RefUtilsExtension on Ref {
       disposeFromStore: disposeSelf,
     );
   }
+}
 
+extension MemoRefExtension on Ref {
   /// Calls the provided function only once.
   /// If you want to use more than one function to be called once,
   /// use the [tag] to differentiate them.
@@ -91,9 +93,9 @@ extension RefUtilsExtension on Ref {
       return (() => value, (newValue) => value = newValue);
     });
   }
+}
 
-  // --------------------------- Dependency Tree ------------------------------
-
+extension DependencyRefExtension on Ref {
   void dependOnItem(Item item) {
     late final void Function() cleanUpDependency;
     void safeDisposeSelf() {
