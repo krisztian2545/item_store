@@ -10,4 +10,4 @@ export 'src/widget_ref_mixin.dart';
 export 'src/widget_ref.dart';
 
 // re-exports
-export 'package:item_store/item_store.dart';
+export 'package:item_store/item_store.dart' hide DependencyRefExtension;

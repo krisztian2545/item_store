@@ -97,18 +97,18 @@ extension MemoRefExtension on Ref {
 
 extension DependencyRefExtension on Ref {
   void dependOnItem(Item item) {
-    late final void Function() cleanUpDependency;
-    void safeDisposeSelf() {
-      removeDisposeCallback(cleanUpDependency);
+    late final void Function() unsub;
+    void invalidateSelf() {
+      removeDisposeCallback(unsub);
       disposeSelf();
     }
 
-    cleanUpDependency = () {
-      item.ref.removeDisposeCallback(safeDisposeSelf);
+    unsub = () {
+      item.ref.removeDisposeCallback(invalidateSelf);
     };
 
-    item.ref.onDispose(safeDisposeSelf);
-    onDispose(cleanUpDependency);
+    item.ref.onDispose(invalidateSelf);
+    onDispose(unsub);
   }
 
   void dependOnIfExistsInStore(Object key, {required ItemStore store}) {
