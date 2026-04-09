@@ -21,9 +21,9 @@ class ItemMetaData {
   ItemMetaData({
     List<ItemDisposeCallback>? disposeCallbacks,
     List<DisposableObjectRecord>? disposableObjects,
-  })  : _disposeCallbacks = [],
-        _disposableObjects = {},
-        _disposed = false {
+  }) : _disposeCallbacks = [],
+       _disposableObjects = {},
+       _disposed = false {
     if (disposableObjects != null) {
       for (final args in disposableObjects) {
         addDisposableObject(args.$1, args.$2);
@@ -46,6 +46,9 @@ class ItemMetaData {
       UnmodifiableListView(_disposableObjects.keys);
 
   bool _disposed;
+
+  /// Becomes True right after calling dispose on the item, even though it didn't finish
+  /// calling all it's dispose callbacks.
   bool get disposed => _disposed;
 
   // ------------------ Dispose Callback -----------------
@@ -64,10 +67,7 @@ class ItemMetaData {
 
   // ------------------ Disposable Object -----------------
 
-  T addDisposableObject<T extends Object>(
-    T object, [
-    void Function(T)? dispose,
-  ]) {
+  T addDisposableObject<T extends Object>(T object, [void Function(T)? dispose]) {
     assert(!_disposed);
     if (_disposed || _disposableObjects.keys.contains(object)) return object;
 

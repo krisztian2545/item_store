@@ -2,8 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:item_store/item_store.dart';
 import 'package:item_store_flutter/src/inherited_item_store.dart';
 
-typedef ItemStoreDisposeBehaviorCallback = void Function(
-    ItemStoreProvider widget, ItemStore store);
+typedef ItemStoreDisposeBehaviorCallback = void Function(ItemStoreProvider widget, ItemStore store);
 
 abstract class ItemStoreProviderDisposeBehavior {
   const ItemStoreProviderDisposeBehavior();
@@ -16,8 +15,7 @@ class ItemStoreDisposeBehavior extends ItemStoreProviderDisposeBehavior {
   final void Function(ItemStoreProvider widget, ItemStore store) callback;
 
   @override
-  void dispose(ItemStoreProvider widget, ItemStore store) =>
-      callback(widget, store);
+  void dispose(ItemStoreProvider widget, ItemStore store) => callback(widget, store);
 }
 
 class AlwaysDisposeItemStore extends ItemStoreProviderDisposeBehavior {
@@ -45,11 +43,8 @@ class ItemStoreProvider extends StatefulWidget {
     this.child,
     this.builder,
     this.disposeBehavior = const DoNotDisposeGivenItemStore(),
-  })  : store = null,
-        assert(
-          child != null || builder != null,
-          "Either child or builder must be given.",
-        );
+  }) : store = null,
+       assert((child != null) ^ (builder != null), "Specify either child or builder!");
 
   const ItemStoreProvider.value({
     super.key,
@@ -57,10 +52,7 @@ class ItemStoreProvider extends StatefulWidget {
     this.child,
     this.builder,
     this.disposeBehavior = const DoNotDisposeGivenItemStore(),
-  }) : assert(
-          child != null || builder != null,
-          "Either child or builder must be given.",
-        );
+  }) : assert((child != null) ^ (builder != null), "Specify either child or builder!");
 
   final ItemStore? store;
 

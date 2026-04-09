@@ -18,9 +18,7 @@ void main() {
     final widgetRef = WidgetRef(store: store);
     int timesListenerCalled = 0;
 
-    final controller = widgetRef.textController(
-      listener: (controller) => timesListenerCalled++,
-    );
+    final controller = widgetRef.textController(listener: (controller) => timesListenerCalled++);
     controller.text = 'anything';
 
     expect(timesListenerCalled, 1);
@@ -30,35 +28,32 @@ void main() {
     expect(timesListenerCalled, 2);
   });
 
-  testWidgets(
-    'disposeWithWidget registers dispose callback only once',
-    (tester) async {
-      final refresher = <void Function()>[];
-      late final TestDisposableObject testObject;
-      await tester.pumpWidget(
-        ItemStoreProvider(
-          child: WidgetRefOnDisposeTest(
-            refresher: refresher,
-            testObjectFactory: () {
-              testObject = MockTestDisposableObject();
-              return testObject;
-            },
-          ),
+  testWidgets('disposeWithWidget registers dispose callback only once', (tester) async {
+    final refresher = <void Function()>[];
+    late final TestDisposableObject testObject;
+    await tester.pumpWidget(
+      ItemStoreProvider(
+        child: WidgetRefOnDisposeTest(
+          refresher: refresher,
+          testObjectFactory: () {
+            testObject = MockTestDisposableObject();
+            return testObject;
+          },
         ),
-      );
-      await tester.pumpAndSettle();
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      // force calling build multiple times
-      await tester.runAsync(() async {
-        for (int i = 0; i < 5; i++) {
-          refresher[0]();
-          await tester.pumpAndSettle();
-        }
-      });
+    // force calling build multiple times
+    await tester.runAsync(() async {
+      for (int i = 0; i < 5; i++) {
+        refresher[0]();
+        await tester.pumpAndSettle();
+      }
+    });
 
-      await tester.pumpWidget(const Placeholder());
+    await tester.pumpWidget(const Placeholder());
 
-      verify(testObject.dispose()).called(1);
-    },
-  );
+    verify(testObject.dispose()).called(1);
+  });
 }
