@@ -81,7 +81,7 @@ final firstName = (ref) {
 };
 ```
 
-// In Flutter widgets
+In Flutter widgets
 ```dart
 class CounterWidget extends ItemConsumer {
   const CounterWidget({super.key});
